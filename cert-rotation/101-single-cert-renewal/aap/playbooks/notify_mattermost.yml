@@ -1,0 +1,62 @@
+---
+- name: Send certificate renewal notification to Mattermost
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    mattermost_webhook_url: "{{ lookup('env', 'MATTERMOST_WEBHOOK_URL') | default('', true) }}"
+    mattermost_channel: "{{ notify_channel | default('cert-lifecycle') }}"
+    notify_hostname: "{{ cert_hostname | default('unknown') }}"
+    notify_service: "{{ cert_service | default('unknown') }}"
+    notify_status: "{{ renewal_status | default('completed') }}"
+    notify_template: "{{ renewal_template | default('unknown') }}"
+    notify_confidence: "{{ agent_confidence | default('N/A') }}"
+    notify_risk: "{{ agent_risk_level | default('unknown') }}"
+    notify_analysis: "{{ agent_analysis | default('No analysis available') }}"
+
+  tasks:
+    - name: Build notification message
+      ansible.builtin.set_fact:
+        notification_message: |
+          **Certificate Renewal {{ notify_status | upper }}**
+
+          | Field | Value |
+          |-------|-------|
+          | Hostname | {{ notify_hostname }} |
+          | Service | {{ notify_service }} |
+          | Template Used | {{ notify_template }} |
+          | Agent Confidence | {{ notify_confidence }}% |
+          | Risk Level | {{ notify_risk }} |
+          | Status | {{ notify_status }} |
+
+          **Agent Analysis:**
+          {{ notify_analysis | truncate(500) }}
+
+    - name: Post to Mattermost
+      ansible.builtin.uri:
+        url: "{{ mattermost_webhook_url }}"
+        method: POST
+        body_format: json
+        body:
+          channel: "{{ mattermost_channel }}"
+          username: "Cert Lifecycle Bot"
+          icon_url: "https://www.ansible.com/favicon.ico"
+          text: "{{ notification_message }}"
+        headers:
+          Content-Type: application/json
+        status_code: [200, 201]
+      when: mattermost_webhook_url | length > 0
+
+    - name: Log to console when Mattermost not configured
+      ansible.builtin.debug:
+        msg: "{{ notification_message }}"
+      when: mattermost_webhook_url | length == 0
+
+    - name: Set notification artifacts
+      ansible.builtin.set_stats:
+        data:
+          notification:
+            status: "sent"
+            channel: "{{ mattermost_channel }}"
+            hostname: "{{ notify_hostname }}"

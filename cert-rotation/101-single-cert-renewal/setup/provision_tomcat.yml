@@ -1,0 +1,254 @@
+---
+- name: Add Tomcat with Java keystore cert to demo VM
+  hosts: webservers
+  become: true
+  gather_facts: true
+  vars_files:
+    - "{{ playbook_dir }}/../group_vars/all.yml"
+
+  vars:
+    tomcat_base: /opt/tomcat
+    tomcat_keystore: /opt/tomcat/conf/keystore.jks
+    tomcat_port: 8443
+    keystore_password: changeit
+
+  tasks:
+    - name: Install Java
+      ansible.builtin.dnf:
+        name:
+          - java-17-openjdk
+          - java-17-openjdk-devel
+        state: present
+
+    - name: Create tomcat directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ tomcat_base }}"
+        - "{{ tomcat_base }}/conf"
+        - "{{ tomcat_base }}/webapps/ROOT"
+
+    - name: Create simple health endpoint
+      ansible.builtin.copy:
+        content: '{"status": "ok", "service": "api-server"}'
+        dest: "{{ tomcat_base }}/webapps/ROOT/health"
+        mode: '0644'
+
+    - name: Pull CA certificate from Vault
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/{{ vault_secret_path }}"
+        method: GET
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+      register: vault_secrets
+
+    - name: Write CA certificate to temp file
+      ansible.builtin.copy:
+        content: "{{ vault_secrets.json.data.data.ca_cert | b64decode }}"
+        dest: /tmp/ca_cert.pem
+        mode: '0600'
+
+    - name: Write CA private key to temp file
+      ansible.builtin.copy:
+        content: "{{ vault_secrets.json.data.data.ca_privatekey | b64decode }}"
+        dest: /tmp/ca_key.pem
+        mode: '0600'
+
+    - name: Generate server private key for Tomcat
+      community.crypto.openssl_privatekey:
+        path: /tmp/tomcat.key
+        size: "{{ cert_key_size }}"
+        type: RSA
+        mode: '0600'
+
+    - name: Generate CSR for Tomcat
+      community.crypto.openssl_csr:
+        path: /tmp/tomcat.csr
+        privatekey_path: /tmp/tomcat.key
+        common_name: "{{ cert_domain }}"
+        subject_alt_name:
+          - "DNS:{{ cert_domain }}"
+        key_usage:
+          - digitalSignature
+          - keyEncipherment
+        extended_key_usage:
+          - serverAuth
+        force: true
+
+    - name: Sign expired certificate for Tomcat
+      community.crypto.x509_certificate:
+        path: /tmp/tomcat.crt
+        privatekey_path: /tmp/tomcat.key
+        csr_path: /tmp/tomcat.csr
+        provider: ownca
+        ownca_path: /tmp/ca_cert.pem
+        ownca_privatekey_path: /tmp/ca_key.pem
+        ownca_not_before: "{{ cert_expired_start }}"
+        ownca_not_after: "{{ cert_expired_end }}"
+        force: true
+
+    - name: Create PKCS12 bundle
+      ansible.builtin.command:
+        cmd: >
+          openssl pkcs12 -export
+          -in /tmp/tomcat.crt
+          -inkey /tmp/tomcat.key
+          -certfile /tmp/ca_cert.pem
+          -out /tmp/tomcat.p12
+          -name tomcat
+          -passout pass:{{ keystore_password }}
+
+    - name: Create Java keystore from PKCS12
+      ansible.builtin.command:
+        cmd: >
+          keytool -importkeystore
+          -srckeystore /tmp/tomcat.p12
+          -srcstoretype PKCS12
+          -srcstorepass {{ keystore_password }}
+          -destkeystore {{ tomcat_keystore }}
+          -deststorepass {{ keystore_password }}
+          -noprompt
+      args:
+        creates: "{{ tomcat_keystore }}"
+
+    - name: Clean up temp files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/tomcat.key
+        - /tmp/tomcat.csr
+        - /tmp/tomcat.crt
+        - /tmp/tomcat.p12
+        - /tmp/ca_cert.pem
+        - /tmp/ca_key.pem
+
+    - name: Create simple Java HTTPS server
+      ansible.builtin.copy:
+        content: |
+          #!/bin/bash
+          cd {{ tomcat_base }}
+          exec java -Djavax.net.ssl.keyStore={{ tomcat_keystore }} \
+                    -Djavax.net.ssl.keyStorePassword={{ keystore_password }} \
+                    -cp webapps/ROOT \
+                    com.sun.net.httpserver.SimpleFileServer \
+                    --bind 0.0.0.0 \
+                    --port {{ tomcat_port }} \
+                    --directory webapps/ROOT 2>&1
+        dest: "{{ tomcat_base }}/start.sh"
+        mode: '0755'
+
+    - name: Create systemd service for the Java app
+      ansible.builtin.copy:
+        content: |
+          [Unit]
+          Description=Demo API Server (Java TLS)
+          After=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/bin/bash -c 'cd {{ tomcat_base }} && python3 -c "
+          import ssl, http.server, socketserver
+          context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+          context.load_cert_chain(certfile=\"/tmp/api-server.crt\", keyfile=\"/tmp/api-server.key\")
+          handler = http.server.SimpleHTTPRequestHandler
+          with socketserver.TCPServer((\"0.0.0.0\", {{ tomcat_port }}), handler) as httpd:
+              httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+              httpd.serve_forever()
+          "'
+          WorkingDirectory={{ tomcat_base }}/webapps/ROOT
+          Restart=always
+          RestartSec=5
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/api-server.service
+        mode: '0644'
+
+    - name: Generate PEM cert for the Python TLS server
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/{{ vault_secret_path }}"
+        method: GET
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+      register: vault_secrets_again
+
+    - name: Write CA cert
+      ansible.builtin.copy:
+        content: "{{ vault_secrets_again.json.data.data.ca_cert | b64decode }}"
+        dest: /tmp/ca_cert.pem
+        mode: '0600'
+
+    - name: Write CA key
+      ansible.builtin.copy:
+        content: "{{ vault_secrets_again.json.data.data.ca_privatekey | b64decode }}"
+        dest: /tmp/ca_key.pem
+        mode: '0600'
+
+    - name: Generate API server key
+      community.crypto.openssl_privatekey:
+        path: /tmp/api-server.key
+        size: 2048
+        type: RSA
+        mode: '0600'
+
+    - name: Generate API server CSR
+      community.crypto.openssl_csr:
+        path: /tmp/api-server.csr
+        privatekey_path: /tmp/api-server.key
+        common_name: "{{ cert_domain }}"
+        subject_alt_name:
+          - "DNS:{{ cert_domain }}"
+        force: true
+
+    - name: Sign expired API server cert
+      community.crypto.x509_certificate:
+        path: /tmp/api-server.crt
+        privatekey_path: /tmp/api-server.key
+        csr_path: /tmp/api-server.csr
+        provider: ownca
+        ownca_path: /tmp/ca_cert.pem
+        ownca_privatekey_path: /tmp/ca_key.pem
+        ownca_not_before: "{{ cert_expired_start }}"
+        ownca_not_after: "{{ cert_expired_end }}"
+        force: true
+
+    - name: Clean up CA files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/ca_cert.pem
+        - /tmp/ca_key.pem
+        - /tmp/api-server.csr
+
+    - name: Reload systemd and start API server
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: api-server
+        state: restarted
+        enabled: true
+
+    - name: Open port 8443
+      ansible.posix.firewalld:
+        port: 8443/tcp
+        permanent: true
+        state: enabled
+        immediate: true
+      ignore_errors: true
+
+    - name: Verify API server cert is expired
+      ansible.builtin.shell: |
+        echo | openssl s_client -connect 127.0.0.1:{{ tomcat_port }} 2>/dev/null | openssl x509 -noout -dates -subject
+      register: api_cert_info
+      changed_when: false
+
+    - name: Display summary
+      ansible.builtin.debug:
+        msg:
+          - "API Server deployed with expired TLS certificate"
+          - "Port: {{ tomcat_port }}"
+          - "Keystore: {{ tomcat_keystore }}"
+          - "{{ api_cert_info.stdout_lines }}"
