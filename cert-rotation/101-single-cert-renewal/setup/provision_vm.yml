@@ -85,10 +85,26 @@
         type: RSA
         mode: '0600'
 
+    - name: Generate CA CSR
+      community.crypto.openssl_csr:
+        path: /tmp/ca_csr.pem
+        privatekey_path: /tmp/ca_key.pem
+        common_name: "Demo Certificate Authority"
+        organization_name: "Demo Org"
+        basic_constraints:
+          - "CA:TRUE"
+        basic_constraints_critical: true
+        key_usage:
+          - keyCertSign
+          - cRLSign
+        key_usage_critical: true
+        force: true
+
     - name: Generate CA certificate
       community.crypto.x509_certificate:
         path: /tmp/ca_cert.pem
         privatekey_path: /tmp/ca_key.pem
+        csr_path: /tmp/ca_csr.pem
         provider: selfsigned
         selfsigned_not_after: "+3650d"
         selfsigned_create_subject_key_identifier: always_create
@@ -124,6 +140,7 @@
       loop:
         - /tmp/ca_key.pem
         - /tmp/ca_cert.pem
+        - /tmp/ca_csr.pem
 
     - name: Enable AppRole auth in Vault
       ansible.builtin.uri:
@@ -185,7 +202,7 @@
         content: |
           server {
               listen 443 ssl;
-              server_name {{ ansible_fqdn }} {{ ansible_default_ipv4.address }};
+              server_name {{ cert_domain }} {{ ansible_default_ipv4.address }};
 
               ssl_certificate     {{ nginx_cert_dir }}/server.crt;
               ssl_certificate_key {{ nginx_cert_dir }}/server.key;

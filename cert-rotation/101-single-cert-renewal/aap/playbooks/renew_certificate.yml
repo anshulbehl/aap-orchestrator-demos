@@ -3,7 +3,6 @@
   hosts: "{{ _host | default('webservers') }}"
   become: true
   gather_facts: true
-
   tasks:
     - name: Pull CA certificate from Vault
       ansible.builtin.uri:
@@ -53,9 +52,9 @@
       community.crypto.openssl_csr:
         path: /tmp/server.csr
         privatekey_path: "{{ nginx_cert_dir }}/server.key"
-        common_name: "{{ ansible_fqdn }}"
+        common_name: "{{ cert_domain }}"
         subject_alt_name:
-          - "DNS:{{ ansible_fqdn }}"
+          - "DNS:{{ cert_domain }}"
           - "IP:{{ ansible_default_ipv4.address }}"
         key_usage:
           - digitalSignature
@@ -97,7 +96,7 @@
 
     - name: Get new certificate info
       ansible.builtin.shell: |
-        echo | openssl s_client -connect 127.0.0.1:443 -servername {{ ansible_fqdn }} 2>/dev/null | openssl x509 -noout -dates -subject
+        echo | openssl s_client -connect 127.0.0.1:443 -servername {{ cert_domain }} 2>/dev/null | openssl x509 -noout -dates -subject
       register: new_cert_info
       changed_when: false
 
@@ -106,8 +105,8 @@
         data:
           cert_renewal:
             status: "success"
-            hostname: "{{ ansible_fqdn }}"
+            hostname: "{{ cert_domain }}"
             ip: "{{ ansible_default_ipv4.address }}"
-            cert_cn: "{{ ansible_fqdn }}"
+            cert_cn: "{{ cert_domain }}"
             valid_days: "{{ cert_valid_days }}"
             cert_info: "{{ new_cert_info.stdout }}"

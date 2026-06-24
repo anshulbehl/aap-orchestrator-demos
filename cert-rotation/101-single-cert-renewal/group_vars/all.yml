@@ -17,7 +17,8 @@ nginx_cert_dir: /etc/nginx/ssl
 nginx_conf_dir: /etc/nginx/conf.d
 
 # Certificate Parameters
-cert_cn: "{{ inventory_hostname }}"
+cert_domain: "{{ lookup('env', 'CERT_DOMAIN') | default('certdemo.demoredhat.com', true) }}"
+cert_cn: "{{ cert_domain }}"
 cert_valid_days: 90
 cert_key_size: 2048
 
