@@ -1,0 +1,223 @@
+---
+- name: Provision demo VM with nginx and HashiCorp Vault
+  hosts: webservers
+  become: true
+  gather_facts: true
+  vars_files:
+    - "{{ playbook_dir }}/../group_vars/all.yml"
+
+  tasks:
+    - name: Install required packages
+      ansible.builtin.dnf:
+        name:
+          - nginx
+          - podman
+          - openssl
+          - python3-pip
+          - jq
+          - curl
+        state: present
+
+    - name: Install community.crypto dependencies
+      ansible.builtin.pip:
+        name:
+          - cryptography>=3.0
+        state: present
+
+    - name: Create nginx SSL directory
+      ansible.builtin.file:
+        path: "{{ nginx_cert_dir }}"
+        state: directory
+        mode: '0700'
+        owner: root
+        group: root
+
+    - name: Start and enable podman socket
+      ansible.builtin.systemd:
+        name: podman.socket
+        state: started
+        enabled: true
+
+    - name: Start HashiCorp Vault container (dev mode)
+      containers.podman.podman_container:
+        name: "{{ vault_container_name }}"
+        image: "{{ vault_container_image }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "{{ vault_port }}:{{ vault_port }}"
+        env:
+          VAULT_DEV_ROOT_TOKEN_ID: "{{ vault_token }}"
+          VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:{{ vault_port }}"
+        cap_add:
+          - IPC_LOCK
+
+    - name: Wait for Vault to be ready
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/health"
+        method: GET
+        status_code: 200
+      register: vault_health
+      retries: 15
+      delay: 2
+      until: vault_health.status == 200
+
+    - name: Enable KV secrets engine v2
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/mounts/ansible"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        body_format: json
+        body:
+          type: kv
+          options:
+            version: "2"
+        status_code: [200, 204]
+      register: kv_mount
+      failed_when: kv_mount.status not in [200, 204] and 'path is already in use' not in (kv_mount.json.errors | default([]) | join(' '))
+      ignore_errors: true
+
+    - name: Generate CA private key
+      community.crypto.openssl_privatekey:
+        path: /tmp/ca_key.pem
+        size: 4096
+        type: RSA
+        mode: '0600'
+
+    - name: Generate CA certificate
+      community.crypto.x509_certificate:
+        path: /tmp/ca_cert.pem
+        privatekey_path: /tmp/ca_key.pem
+        provider: selfsigned
+        selfsigned_not_after: "+3650d"
+        selfsigned_create_subject_key_identifier: always_create
+        force: true
+
+    - name: Read CA certificate
+      ansible.builtin.slurp:
+        src: /tmp/ca_cert.pem
+      register: ca_cert_content
+
+    - name: Read CA private key
+      ansible.builtin.slurp:
+        src: /tmp/ca_key.pem
+      register: ca_key_content
+
+    - name: Store CA cert and key in Vault
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/{{ vault_secret_path }}"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        body_format: json
+        body:
+          data:
+            ca_cert: "{{ ca_cert_content.content }}"
+            ca_privatekey: "{{ ca_key_content.content }}"
+        status_code: [200, 204]
+
+    - name: Clean up local CA files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/ca_key.pem
+        - /tmp/ca_cert.pem
+
+    - name: Enable AppRole auth in Vault
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/auth/approle"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        body_format: json
+        body:
+          type: approle
+        status_code: [200, 204]
+      ignore_errors: true
+
+    - name: Create Vault policy for cert access
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/policies/acl/cert-manager"
+        method: PUT
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        body_format: json
+        body:
+          policy: |
+            path "ansible/data/certificate" {
+              capabilities = ["read"]
+            }
+        status_code: [200, 204]
+
+    - name: Create AppRole role
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/auth/approle/role/cert-manager"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        body_format: json
+        body:
+          token_policies: ["cert-manager"]
+          token_ttl: "1h"
+          token_max_ttl: "4h"
+        status_code: [200, 204]
+
+    - name: Get AppRole role_id
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/auth/approle/role/cert-manager/role-id"
+        method: GET
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+      register: role_id_response
+
+    - name: Generate AppRole secret_id
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/auth/approle/role/cert-manager/secret-id"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+      register: secret_id_response
+
+    - name: Configure nginx for TLS
+      ansible.builtin.copy:
+        content: |
+          server {
+              listen 443 ssl;
+              server_name {{ ansible_fqdn }} {{ ansible_default_ipv4.address }};
+
+              ssl_certificate     {{ nginx_cert_dir }}/server.crt;
+              ssl_certificate_key {{ nginx_cert_dir }}/server.key;
+
+              location / {
+                  root /usr/share/nginx/html;
+                  index index.html;
+              }
+          }
+        dest: "{{ nginx_conf_dir }}/tls.conf"
+        mode: '0644'
+
+    - name: Open firewall ports
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: true
+        state: enabled
+        immediate: true
+      loop:
+        - 443/tcp
+        - 80/tcp
+        - 8200/tcp
+      ignore_errors: true
+
+    - name: Display setup summary
+      ansible.builtin.debug:
+        msg:
+          - "VM provisioned successfully"
+          - ""
+          - "Vault:     {{ vault_addr }}"
+          - "Vault Token: {{ vault_token }}"
+          - "Role ID:   {{ role_id_response.json.data.role_id }}"
+          - "Secret ID: {{ secret_id_response.json.data.secret_id }}"
+          - ""
+          - "Next: Run generate_expired_cert.yml to create an expired certificate"

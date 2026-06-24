@@ -1,0 +1,99 @@
+---
+- name: Generate an intentionally expired certificate
+  hosts: webservers
+  become: true
+  gather_facts: true
+  vars_files:
+    - "{{ playbook_dir }}/../group_vars/all.yml"
+
+  tasks:
+    - name: Pull CA certificate from Vault
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/{{ vault_secret_path }}"
+        method: GET
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+      register: vault_secrets
+
+    - name: Write CA certificate to temp file
+      ansible.builtin.copy:
+        content: "{{ vault_secrets.json.data.data.ca_cert | b64decode }}"
+        dest: /tmp/ca_cert.pem
+        mode: '0600'
+
+    - name: Write CA private key to temp file
+      ansible.builtin.copy:
+        content: "{{ vault_secrets.json.data.data.ca_privatekey | b64decode }}"
+        dest: /tmp/ca_key.pem
+        mode: '0600'
+
+    - name: Generate server private key
+      community.crypto.openssl_privatekey:
+        path: "{{ nginx_cert_dir }}/server.key"
+        size: "{{ cert_key_size }}"
+        type: RSA
+        mode: '0600'
+
+    - name: Generate CSR
+      community.crypto.openssl_csr:
+        path: /tmp/server.csr
+        privatekey_path: "{{ nginx_cert_dir }}/server.key"
+        common_name: "{{ ansible_fqdn }}"
+        subject_alt_name:
+          - "DNS:{{ ansible_fqdn }}"
+          - "IP:{{ ansible_default_ipv4.address }}"
+        key_usage:
+          - digitalSignature
+          - keyEncipherment
+        extended_key_usage:
+          - serverAuth
+        force: true
+
+    - name: Sign certificate with CA (expired 7 days ago)
+      community.crypto.x509_certificate:
+        path: "{{ nginx_cert_dir }}/server.crt"
+        privatekey_path: "{{ nginx_cert_dir }}/server.key"
+        csr_path: /tmp/server.csr
+        provider: ownca
+        ownca_path: /tmp/ca_cert.pem
+        ownca_privatekey_path: /tmp/ca_key.pem
+        ownca_not_before: "{{ cert_expired_start }}"
+        ownca_not_after: "{{ cert_expired_end }}"
+        force: true
+
+    - name: Append CA cert to create full chain
+      ansible.builtin.shell: |
+        cat {{ nginx_cert_dir }}/server.crt /tmp/ca_cert.pem > {{ nginx_cert_dir }}/server-full.crt
+        mv {{ nginx_cert_dir }}/server-full.crt {{ nginx_cert_dir }}/server.crt
+      changed_when: true
+
+    - name: Clean up temp CA files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/ca_cert.pem
+        - /tmp/ca_key.pem
+        - /tmp/server.csr
+
+    - name: Start nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted
+        enabled: true
+
+    - name: Verify certificate is expired
+      ansible.builtin.shell: |
+        echo | openssl s_client -connect 127.0.0.1:443 -servername {{ ansible_fqdn }} 2>/dev/null | openssl x509 -noout -dates -subject
+      register: cert_info
+      changed_when: false
+
+    - name: Display certificate status
+      ansible.builtin.debug:
+        msg:
+          - "Expired certificate deployed to nginx"
+          - ""
+          - "{{ cert_info.stdout_lines }}"
+          - ""
+          - "Verify from your laptop:"
+          - "  curl -vk https://{{ ansible_default_ipv4.address }}"

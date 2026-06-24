@@ -1,0 +1,466 @@
+{
+  "name": "Certificate Lifecycle - Reactive Remediation",
+  "description": "Event-driven certificate renewal triggered by observability alerts (webhook, Splunk, Dynatrace, Prometheus). Normalizes alert data, AI agent plans renewal, operator approves, AAP executes and validates.",
+  "schema_version": "2.0.0",
+  "triggers": [
+    {
+      "id": "trigger_webhook",
+      "name": "Certificate Expiry Alert",
+      "type": "webhook_trigger",
+      "config": {
+        "webhook_path": "cert-expiry-alert",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "default": "webhook",
+              "description": "Alert source identifier"
+            },
+            "alertname": {
+              "type": "string",
+              "description": "Alert name from monitoring system"
+            },
+            "status": {
+              "type": "string",
+              "default": "firing",
+              "description": "Alert status"
+            },
+            "hostname": {
+              "type": "string",
+              "description": "Host where the certificate resides"
+            },
+            "service": {
+              "type": "string",
+              "default": "",
+              "description": "Service name"
+            },
+            "cert_cn": {
+              "type": "string",
+              "description": "Certificate common name"
+            },
+            "port": {
+              "type": "string",
+              "default": "443",
+              "description": "TLS service port"
+            },
+            "days_remaining": {
+              "type": "string",
+              "default": "unknown",
+              "description": "Days until expiry"
+            },
+            "receiver": {
+              "type": "string",
+              "description": "Alertmanager receiver path"
+            },
+            "groupLabels": {
+              "type": "object",
+              "description": "Alert group labels"
+            },
+            "commonLabels": {
+              "type": "object",
+              "description": "Common labels"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "trigger_splunk",
+      "name": "Splunk ITSI Alert",
+      "type": "webhook_trigger",
+      "config": {
+        "webhook_path": "cert-splunk-alert",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "default": "splunk",
+              "description": "Alert source"
+            },
+            "search_name": {
+              "type": "string",
+              "description": "Splunk saved search or correlation search name"
+            },
+            "result": {
+              "type": "object",
+              "description": "Splunk search result containing cert fields",
+              "properties": {
+                "host": { "type": "string" },
+                "cert_cn": { "type": "string" },
+                "days_remaining": { "type": "string" },
+                "port": { "type": "string" },
+                "service": { "type": "string" },
+                "severity": { "type": "string" },
+                "kpi_name": { "type": "string" }
+              }
+            },
+            "sid": {
+              "type": "string",
+              "description": "Splunk search ID"
+            },
+            "app": {
+              "type": "string",
+              "description": "Splunk app context"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "trigger_dynatrace",
+      "name": "Dynatrace Problem",
+      "type": "webhook_trigger",
+      "config": {
+        "webhook_path": "cert-dynatrace-alert",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "default": "dynatrace",
+              "description": "Alert source"
+            },
+            "ProblemID": {
+              "type": "string",
+              "description": "Dynatrace problem ID"
+            },
+            "ProblemTitle": {
+              "type": "string",
+              "description": "Problem title (e.g., SSL certificate expiring soon)"
+            },
+            "State": {
+              "type": "string",
+              "description": "Problem state (OPEN, RESOLVED)"
+            },
+            "ProblemSeverity": {
+              "type": "string",
+              "description": "Severity level"
+            },
+            "ImpactedEntities": {
+              "type": "array",
+              "description": "Affected entities with name and type",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "entity": { "type": "string" },
+                  "name": { "type": "string" },
+                  "type": { "type": "string" }
+                }
+              }
+            },
+            "ProblemDetailsJSON": {
+              "type": "object",
+              "description": "Detailed problem context"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "trigger_prometheus",
+      "name": "Prometheus Alertmanager",
+      "type": "webhook_trigger",
+      "config": {
+        "webhook_path": "cert-prometheus-alert",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "default": "prometheus",
+              "description": "Alert source"
+            },
+            "alerts": {
+              "type": "array",
+              "description": "Alertmanager alerts array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string" },
+                  "labels": { "type": "object" },
+                  "annotations": { "type": "object" },
+                  "startsAt": { "type": "string" },
+                  "endsAt": { "type": "string" }
+                }
+              }
+            },
+            "commonLabels": {
+              "type": "object",
+              "description": "Labels common to all alerts in the group"
+            },
+            "groupLabels": {
+              "type": "object",
+              "description": "Labels used for grouping"
+            },
+            "receiver": {
+              "type": "string"
+            },
+            "externalURL": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "normalize_alert",
+      "name": "Normalize Alert",
+      "type": "script",
+      "config": {
+        "language": "python",
+        "code": "import json\nimport os\n\n# Detect source and extract raw fields\nsource = os.getenv('SOURCE', 'unknown')\nraw_payload = os.getenv('RAW_PAYLOAD', '{}')\n\ntry:\n    payload = json.loads(raw_payload)\nexcept (json.JSONDecodeError, TypeError):\n    payload = {}\n\nhostname = ''\ncert_cn = ''\nservice = ''\nport = '443'\ndays_remaining = 'unknown'\nalertname = 'unknown'\nstatus = 'firing'\n\nif source == 'splunk':\n    result = payload.get('result', {})\n    hostname = result.get('host', '')\n    cert_cn = result.get('cert_cn', hostname)\n    service = result.get('service', '')\n    port = result.get('port', '443')\n    days_remaining = str(result.get('days_remaining', 'unknown'))\n    alertname = payload.get('search_name', 'SplunkCertAlert')\n    status = 'firing'\n\nelif source == 'dynatrace':\n    alertname = payload.get('ProblemTitle', 'DynatraceCertProblem')\n    status = 'firing' if payload.get('State') == 'OPEN' else 'resolved'\n    entities = payload.get('ImpactedEntities', [])\n    if entities:\n        hostname = entities[0].get('name', '')\n    details = payload.get('ProblemDetailsJSON', {})\n    cert_cn = hostname\n    port = '443'\n    days_remaining = 'unknown'\n\nelif source == 'prometheus':\n    alerts = payload.get('alerts', [])\n    common = payload.get('commonLabels', {})\n    if alerts:\n        first = alerts[0]\n        labels = first.get('labels', {})\n        hostname = labels.get('hostname', labels.get('instance', common.get('hostname', '')))\n        cert_cn = labels.get('cert_cn', hostname)\n        service = labels.get('service', labels.get('job', ''))\n        port = labels.get('port', '443')\n        days_remaining = str(labels.get('days_remaining', 'unknown'))\n        alertname = labels.get('alertname', common.get('alertname', 'PromCertAlert'))\n        status = first.get('status', 'firing')\n    else:\n        hostname = common.get('hostname', '')\n        alertname = common.get('alertname', 'PromCertAlert')\n\nelse:\n    # Generic webhook / manual trigger\n    hostname = payload.get('hostname', '')\n    cert_cn = payload.get('cert_cn', hostname)\n    service = payload.get('service', '')\n    port = payload.get('port', '443')\n    days_remaining = str(payload.get('days_remaining', 'unknown'))\n    alertname = payload.get('alertname', 'CertAlert')\n    status = payload.get('status', 'firing')\n    # Check commonLabels fallback\n    common = payload.get('commonLabels', {})\n    if not cert_cn or cert_cn == hostname:\n        cert_cn = common.get('cert_cn', cert_cn)\n    if not service:\n        job = common.get('job', '')\n        service = common.get('service', job.split('/')[-1] if '/' in job else '')\n\n# Ensure cert_cn has a value\nif not cert_cn:\n    cert_cn = hostname\n\n# Determine event type\nevent_type = 'certificate_expiry'\nlow_name = alertname.lower()\nif 'mismatch' in low_name:\n    event_type = 'certificate_mismatch'\nelif 'tls' in low_name or 'ssl' in low_name:\n    event_type = 'tls_error'\n\nnormalized = {\n    'status': 'completed',\n    'alert_id': f'cert-{source}-{hostname}',\n    'hostname': hostname,\n    'cert_cn': cert_cn,\n    'service': service,\n    'port': port,\n    'event_type': event_type,\n    'days_remaining': days_remaining,\n    'alert_source': source,\n    'original_alertname': alertname\n}\n\nprint(json.dumps(normalized))",
+        "environment": {
+          "SOURCE": "${trigger.payload.source}",
+          "RAW_PAYLOAD": "${trigger.payload}"
+        }
+      },
+      "outputs": {
+        "alert_id": "${result.stdout_json.alert_id}",
+        "hostname": "${result.stdout_json.hostname}",
+        "cert_cn": "${result.stdout_json.cert_cn}",
+        "service": "${result.stdout_json.service}",
+        "port": "${result.stdout_json.port}",
+        "event_type": "${result.stdout_json.event_type}",
+        "days_remaining": "${result.stdout_json.days_remaining}",
+        "alert_source": "${result.stdout_json.alert_source}"
+      }
+    },
+    {
+      "id": "plan_renewal",
+      "name": "Plan Renewal",
+      "type": "agentic",
+      "config": {
+        "model": "anthropic/claude-sonnet-4",
+        "prompt": "You are a certificate lifecycle automation agent. A monitoring alert has fired for an expiring or expired certificate. Your job is to plan the renewal by selecting the correct AAP job template and providing the right variables.\n\nNormalized alert details:\n- Alert ID: ${normalize_alert.alert_id}\n- Hostname: ${normalize_alert.hostname}\n- Certificate CN: ${normalize_alert.cert_cn}\n- Service: ${normalize_alert.service}\n- Port: ${normalize_alert.port}\n- Event type: ${normalize_alert.event_type}\n- Days remaining: ${normalize_alert.days_remaining}\n- Alert source: ${normalize_alert.alert_source}\n\nAvailable AAP job templates for certificate renewal:\n\n1. \"Renew Self-Signed Certificate\"\n   Use when: the certificate is self-signed (subject matches issuer, no CA involved)\n   Required variables: cert_name, cert_cn, cert_service\n   Risk: Low. Service reload only (nginx reload), no restart needed.\n\n2. \"Renew IPA Certificate\"\n   Use when: the certificate was issued by an internal CA (FreeIPA/certmonger) and is stored as a PEM file\n   Required variables: cert_name, cert_cn, cert_service\n   Risk: Medium. Requires CSR submission to IPA and service reload.\n\n3. \"Renew Java Keystore Certificate\"\n   Use when: the certificate is stored in a Java keystore (JKS/PKCS12) and issued by an internal CA\n   Required variables: cert_name, cert_cn, cert_service, cert_port\n   Risk: High. Requires full service restart, potential downtime.\n\nInstructions:\n- Use the normalized alert details above to determine the correct renewal strategy.\n- If the service name suggests a Java application (e.g., tomcat, api-server, spring, jboss) or the port is a known Java service port (8443, 8444, 8445, 8446), select the Java Keystore template.\n- If the service is a web server (nginx, httpd, apache) with an internal CA cert, select the IPA Certificate template.\n- If the certificate appears to be self-signed or is on a dev/test service, select the Self-Signed template.\n- Derive cert_name from hostname and service (e.g., hostname-service).\n- Use the cert_cn from the normalized alert.\n- Assess the blast radius: what other services or users could be affected by this renewal.",
+        "response_schema": {
+          "type": "object",
+          "required": ["selected_template", "extra_vars", "risk_level", "reason", "blast_radius"],
+          "properties": {
+            "selected_template": {
+              "type": "string",
+              "enum": ["Renew Self-Signed Certificate", "Renew IPA Certificate", "Renew Java Keystore Certificate"],
+              "description": "The AAP job template to execute"
+            },
+            "extra_vars": {
+              "type": "object",
+              "required": ["cert_name", "cert_cn", "cert_service"],
+              "properties": {
+                "cert_name": {
+                  "type": "string",
+                  "description": "Unique certificate identifier"
+                },
+                "cert_cn": {
+                  "type": "string",
+                  "description": "Certificate Common Name"
+                },
+                "cert_service": {
+                  "type": "string",
+                  "description": "Service using this certificate"
+                },
+                "cert_port": {
+                  "type": "string",
+                  "description": "Port number (required for keystore renewals)"
+                }
+              }
+            },
+            "risk_level": {
+              "type": "string",
+              "enum": ["low", "medium", "high"]
+            },
+            "reason": {
+              "type": "string",
+              "description": "Explanation of why this template and these variables were selected"
+            },
+            "blast_radius": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "List of services or systems that could be affected by this renewal"
+            }
+          }
+        }
+      },
+      "outputs": {
+        "selected_template": "${result.result.content.selected_template}",
+        "extra_vars": "${result.result.content.extra_vars}",
+        "risk_level": "${result.result.content.risk_level}",
+        "reason": "${result.result.content.reason}",
+        "blast_radius": "${result.result.content.blast_radius}"
+      }
+    },
+    {
+      "id": "verify_plan",
+      "name": "Verify Launch Plan",
+      "type": "condition",
+      "config": {
+        "condition": "${plan_renewal.selected_template} != \"\""
+      }
+    },
+    {
+      "id": "approve_renewal",
+      "name": "Approve Renewal",
+      "type": "approval",
+      "config": {
+        "approvers": ["admin"],
+        "on_timeout": "fail",
+        "approver_timeout": 86400
+      }
+    },
+    {
+      "id": "run_renewal_job",
+      "name": "Run Renewal Job",
+      "type": "aap_job_template",
+      "config": {
+        "job_template_name": "${plan_renewal.selected_template}",
+        "organization_name": "Default",
+        "extra_vars": "${plan_renewal.extra_vars}"
+      },
+      "outputs": {
+        "renewal_status": "${result.status}",
+        "renewal_artifacts": "${result.artifacts}"
+      }
+    },
+    {
+      "id": "validate_renewal",
+      "name": "Validate Renewal",
+      "type": "aap_job_template",
+      "config": {
+        "job_template_name": "Validate Cert Renewal",
+        "organization_name": "Default",
+        "extra_vars": {
+          "validate_target": "${normalize_alert.hostname}",
+          "validate_cert_cn": "${normalize_alert.cert_cn}",
+          "validate_port": "${normalize_alert.port}"
+        }
+      },
+      "outputs": {
+        "validation_passed": "${result.artifacts.validation_passed}",
+        "new_expiry": "${result.artifacts.new_expiry_date}"
+      }
+    },
+    {
+      "id": "record_rejection",
+      "name": "Record Rejection",
+      "type": "script",
+      "config": {
+        "language": "python",
+        "code": "import json\nimport os\nfrom datetime import datetime\n\nrejection = {\n    'event': 'renewal_rejected',\n    'timestamp': datetime.utcnow().isoformat() + 'Z',\n    'hostname': os.getenv('HOSTNAME'),\n    'cert_cn': os.getenv('CERT_CN'),\n    'alert_source': os.getenv('ALERT_SOURCE'),\n    'planned_template': os.getenv('TEMPLATE'),\n    'risk_level': os.getenv('RISK'),\n    'agent_reason': os.getenv('REASON'),\n    'outcome': 'Renewal was rejected by operator. Certificate remains in current state.'\n}\n\nprint(json.dumps(rejection, indent=2))",
+        "environment": {
+          "HOSTNAME": "${normalize_alert.hostname}",
+          "CERT_CN": "${normalize_alert.cert_cn}",
+          "ALERT_SOURCE": "${normalize_alert.alert_source}",
+          "TEMPLATE": "${plan_renewal.selected_template}",
+          "RISK": "${plan_renewal.risk_level}",
+          "REASON": "${plan_renewal.reason}"
+        }
+      },
+      "outputs": {
+        "rejection_record": "${result.stdout_json}"
+      }
+    },
+    {
+      "id": "record_bad_plan",
+      "name": "Record Invalid Plan",
+      "type": "script",
+      "config": {
+        "language": "python",
+        "code": "import json\nimport os\nfrom datetime import datetime\n\nrecord = {\n    'event': 'invalid_renewal_plan',\n    'timestamp': datetime.utcnow().isoformat() + 'Z',\n    'hostname': os.getenv('HOSTNAME'),\n    'cert_cn': os.getenv('CERT_CN'),\n    'alert_source': os.getenv('ALERT_SOURCE'),\n    'event_type': os.getenv('EVENT_TYPE'),\n    'outcome': 'AI agent could not produce a valid renewal plan. Manual investigation required.'\n}\n\nprint(json.dumps(record, indent=2))",
+        "environment": {
+          "HOSTNAME": "${normalize_alert.hostname}",
+          "CERT_CN": "${normalize_alert.cert_cn}",
+          "ALERT_SOURCE": "${normalize_alert.alert_source}",
+          "EVENT_TYPE": "${normalize_alert.event_type}"
+        }
+      },
+      "outputs": {
+        "bad_plan_record": "${result.stdout_json}"
+      }
+    },
+    {
+      "id": "summarize_result",
+      "name": "Summarize Result",
+      "type": "script",
+      "config": {
+        "language": "bash",
+        "code": "#!/bin/bash\n\ncat <<SUMMARY\n============================================\n  Certificate Renewal Summary\n============================================\n  Alert Source: ${ALERT_SOURCE}\n  Hostname:    ${HOSTNAME}\n  Cert CN:     ${CERT_CN}\n  Service:     ${SERVICE}\n  Port:        ${PORT}\n  Days Left:   ${DAYS_REMAINING}\n  Risk Level:  ${RISK_LEVEL}\n  Template:    ${SELECTED_TEMPLATE}\n  Agent Reason: ${REASON}\n  Blast Radius: ${BLAST_RADIUS}\n============================================\nSUMMARY",
+        "environment": {
+          "ALERT_SOURCE": "${normalize_alert.alert_source}",
+          "HOSTNAME": "${normalize_alert.hostname}",
+          "CERT_CN": "${normalize_alert.cert_cn}",
+          "SERVICE": "${normalize_alert.service}",
+          "PORT": "${normalize_alert.port}",
+          "DAYS_REMAINING": "${normalize_alert.days_remaining}",
+          "RISK_LEVEL": "${plan_renewal.risk_level}",
+          "SELECTED_TEMPLATE": "${plan_renewal.selected_template}",
+          "REASON": "${plan_renewal.reason}",
+          "BLAST_RADIUS": "${plan_renewal.blast_radius}"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "trigger_webhook",
+      "to": "normalize_alert"
+    },
+    {
+      "from": "trigger_splunk",
+      "to": "normalize_alert"
+    },
+    {
+      "from": "trigger_dynatrace",
+      "to": "normalize_alert"
+    },
+    {
+      "from": "trigger_prometheus",
+      "to": "normalize_alert"
+    },
+    {
+      "from": "normalize_alert",
+      "to": "plan_renewal"
+    },
+    {
+      "from": "plan_renewal",
+      "to": "verify_plan"
+    },
+    {
+      "from": "verify_plan",
+      "to": "approve_renewal",
+      "from_port": "true"
+    },
+    {
+      "from": "verify_plan",
+      "to": "record_bad_plan",
+      "from_port": "false"
+    },
+    {
+      "from": "approve_renewal",
+      "to": "run_renewal_job",
+      "from_port": "approved"
+    },
+    {
+      "from": "approve_renewal",
+      "to": "record_rejection",
+      "from_port": "rejected"
+    },
+    {
+      "from": "run_renewal_job",
+      "to": "validate_renewal"
+    },
+    {
+      "from": "validate_renewal",
+      "to": "summarize_result"
+    },
+    {
+      "from": "record_rejection",
+      "to": "summarize_result"
+    },
+    {
+      "from": "record_bad_plan",
+      "to": "summarize_result"
+    }
+  ]
+}
