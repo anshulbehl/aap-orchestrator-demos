@@ -6,6 +6,9 @@
   vars_files:
     - "{{ playbook_dir }}/../group_vars/all.yml"
 
+  vars:
+    tmp_prefix: "/tmp/expire-nginx-{{ ansible_date_time.epoch }}"
+
   tasks:
     - name: Pull CA certificate from Vault
       ansible.builtin.uri:
@@ -18,13 +21,13 @@
     - name: Write CA certificate to temp file
       ansible.builtin.copy:
         content: "{{ vault_secrets.json.data.data.ca_cert | b64decode }}"
-        dest: /tmp/ca_cert.pem
+        dest: {{ tmp_prefix }}-ca.pem
         mode: '0600'
 
     - name: Write CA private key to temp file
       ansible.builtin.copy:
         content: "{{ vault_secrets.json.data.data.ca_privatekey | b64decode }}"
-        dest: /tmp/ca_key.pem
+        dest: {{ tmp_prefix }}-ca.key
         mode: '0600'
 
     - name: Generate server private key
@@ -36,7 +39,7 @@
 
     - name: Generate CSR
       community.crypto.openssl_csr:
-        path: /tmp/server.csr
+        path: {{ tmp_prefix }}.csr
         privatekey_path: "{{ nginx_cert_dir }}/server.key"
         common_name: "{{ cert_domain }}"
         subject_alt_name:
@@ -53,17 +56,17 @@
       community.crypto.x509_certificate:
         path: "{{ nginx_cert_dir }}/server.crt"
         privatekey_path: "{{ nginx_cert_dir }}/server.key"
-        csr_path: /tmp/server.csr
+        csr_path: {{ tmp_prefix }}.csr
         provider: ownca
-        ownca_path: /tmp/ca_cert.pem
-        ownca_privatekey_path: /tmp/ca_key.pem
+        ownca_path: {{ tmp_prefix }}-ca.pem
+        ownca_privatekey_path: {{ tmp_prefix }}-ca.key
         ownca_not_before: "{{ cert_expired_start }}"
         ownca_not_after: "{{ cert_expired_end }}"
         force: true
 
     - name: Append CA cert to create full chain
       ansible.builtin.shell: |
-        cat {{ nginx_cert_dir }}/server.crt /tmp/ca_cert.pem > {{ nginx_cert_dir }}/server-full.crt
+        cat {{ nginx_cert_dir }}/server.crt {{ tmp_prefix }}-ca.pem > {{ nginx_cert_dir }}/server-full.crt
         mv {{ nginx_cert_dir }}/server-full.crt {{ nginx_cert_dir }}/server.crt
       changed_when: true
 
@@ -72,9 +75,9 @@
         path: "{{ item }}"
         state: absent
       loop:
-        - /tmp/ca_cert.pem
-        - /tmp/ca_key.pem
-        - /tmp/server.csr
+        - {{ tmp_prefix }}-ca.pem
+        - {{ tmp_prefix }}-ca.key
+        - {{ tmp_prefix }}.csr
 
     - name: Start nginx
       ansible.builtin.systemd:
