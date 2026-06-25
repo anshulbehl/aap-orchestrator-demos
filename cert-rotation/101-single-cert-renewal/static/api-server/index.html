@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Internal Platform API</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a1d2e;
+      border-bottom: 1px solid #2d3148;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      background: #ee0000;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .header-title { font-size: 15px; font-weight: 600; color: #f8fafc; }
+    .header-subtitle { font-size: 12px; color: #64748b; }
+
+    .badge {
+      margin-left: auto;
+      background: #052e16;
+      border: 1px solid #166534;
+      color: #4ade80;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .container { max-width: 960px; margin: 40px auto; padding: 0 32px; }
+
+    .hero {
+      background: #1a1d2e;
+      border: 1px solid #2d3148;
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 32px;
+    }
+
+    .hero h1 { font-size: 22px; font-weight: 700; color: #f8fafc; margin-bottom: 6px; }
+    .hero p { font-size: 13px; color: #94a3b8; }
+
+    .meta {
+      display: flex;
+      gap: 24px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #2d3148;
+    }
+
+    .meta-item { font-size: 12px; }
+    .meta-label { color: #64748b; margin-bottom: 2px; }
+    .meta-value { color: #e2e8f0; font-weight: 600; font-family: monospace; }
+
+    h2 { font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+
+    .endpoints { display: flex; flex-direction: column; gap: 8px; margin-bottom: 32px; }
+
+    .endpoint {
+      background: #1a1d2e;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .method {
+      font-size: 11px;
+      font-weight: 700;
+      font-family: monospace;
+      padding: 2px 8px;
+      border-radius: 4px;
+      min-width: 44px;
+      text-align: center;
+    }
+
+    .get { background: #0c2a4a; color: #60a5fa; border: 1px solid #1e40af; }
+    .post { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+    .put { background: #2d1a00; color: #fb923c; border: 1px solid #7c2d12; }
+    .delete { background: #2d0a0a; color: #f87171; border: 1px solid #7f1d1d; }
+
+    .endpoint-path { font-family: monospace; font-size: 13px; color: #e2e8f0; flex: 1; }
+    .endpoint-desc { font-size: 12px; color: #64748b; }
+
+    .endpoint-status {
+      font-size: 11px;
+      color: #4ade80;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .endpoint-status::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #4ade80;
+    }
+
+    .tls-box {
+      background: #1a1d2e;
+      border: 1px solid #166534;
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tls-icon {
+      font-size: 20px;
+    }
+
+    .tls-title { font-size: 13px; font-weight: 600; color: #4ade80; }
+    .tls-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+    footer {
+      margin-top: 48px;
+      padding: 20px 32px;
+      border-top: 1px solid #1e2130;
+      text-align: center;
+      font-size: 11px;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">API</div>
+  <div>
+    <div class="header-title">Internal Platform API</div>
+    <div class="header-subtitle">api.internal — Port 8443</div>
+  </div>
+  <div class="badge">Operational</div>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>Platform API Gateway</h1>
+    <p>Internal REST API for enterprise platform services. All connections require valid TLS certificates. Access restricted to authorized systems only.</p>
+    <div class="meta">
+      <div class="meta-item">
+        <div class="meta-label">Version</div>
+        <div class="meta-value">v2.4.1</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Environment</div>
+        <div class="meta-value">production</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Protocol</div>
+        <div class="meta-value">HTTPS / TLS 1.3</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Auth</div>
+        <div class="meta-value">Bearer Token</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Available Endpoints</h2>
+  <div class="endpoints">
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="endpoint-path">/api/v1/users</span>
+      <span class="endpoint-desc">List platform users</span>
+      <span class="endpoint-status">200 OK</span>
+    </div>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="endpoint-path">/api/v1/users</span>
+      <span class="endpoint-desc">Create a new user</span>
+      <span class="endpoint-status">201 Created</span>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="endpoint-path">/api/v1/policies</span>
+      <span class="endpoint-desc">Retrieve active policies</span>
+      <span class="endpoint-status">200 OK</span>
+    </div>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="endpoint-path">/api/v1/claims</span>
+      <span class="endpoint-desc">Submit a new claim</span>
+      <span class="endpoint-status">202 Accepted</span>
+    </div>
+    <div class="endpoint">
+      <span class="method put">PUT</span>
+      <span class="endpoint-path">/api/v1/claims/{id}</span>
+      <span class="endpoint-desc">Update claim status</span>
+      <span class="endpoint-status">200 OK</span>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="endpoint-path">/api/v1/health</span>
+      <span class="endpoint-desc">Service health check</span>
+      <span class="endpoint-status">200 OK</span>
+    </div>
+  </div>
+
+  <h2>TLS Status</h2>
+  <div class="tls-box">
+    <div class="tls-icon">🔒</div>
+    <div>
+      <div class="tls-title">Certificate Valid</div>
+      <div class="tls-sub">All connections encrypted with TLS 1.3. Certificate issued by internal CA.</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Internal Platform API &nbsp;·&nbsp; Managed by Ansible Automation Platform &nbsp;·&nbsp; Restricted Access
+</footer>
+
+</body>
+</html>
