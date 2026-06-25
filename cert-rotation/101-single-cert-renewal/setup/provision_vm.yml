@@ -197,7 +197,19 @@
           X-Vault-Token: "{{ vault_token }}"
       register: secret_id_response
 
-    - name: Configure nginx for TLS
+    - name: Install git
+      ansible.builtin.dnf:
+        name: git
+        state: present
+
+    - name: Clone Parasol Insurance demo website
+      ansible.builtin.git:
+        repo: https://github.com/ansible-tmm/parasol-website.git
+        dest: /usr/share/nginx/parasol
+        version: main
+        force: true
+
+    - name: Configure nginx for TLS with Parasol website
       ansible.builtin.copy:
         content: |
           server {
@@ -207,9 +219,11 @@
               ssl_certificate     {{ nginx_cert_dir }}/server.crt;
               ssl_certificate_key {{ nginx_cert_dir }}/server.key;
 
+              root /usr/share/nginx/parasol;
+              index index.html;
+
               location / {
-                  root /usr/share/nginx/html;
-                  index index.html;
+                  try_files $uri $uri/ =404;
               }
           }
         dest: "{{ nginx_conf_dir }}/tls.conf"
