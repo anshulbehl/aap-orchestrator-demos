@@ -21,13 +21,13 @@
     - name: Write CA certificate to temp file
       ansible.builtin.copy:
         content: "{{ vault_secrets.json.data.data.ca_cert | b64decode }}"
-        dest: {{ tmp_prefix }}-ca.pem
+        dest: "{{ tmp_prefix }}-ca.pem"
         mode: '0600'
 
     - name: Write CA private key to temp file
       ansible.builtin.copy:
         content: "{{ vault_secrets.json.data.data.ca_privatekey | b64decode }}"
-        dest: {{ tmp_prefix }}-ca.key
+        dest: "{{ tmp_prefix }}-ca.key"
         mode: '0600'
 
     - name: Generate server private key
@@ -39,7 +39,7 @@
 
     - name: Generate CSR
       community.crypto.openssl_csr:
-        path: {{ tmp_prefix }}.csr
+        path: "{{ tmp_prefix }}.csr"
         privatekey_path: "{{ nginx_cert_dir }}/server.key"
         common_name: "{{ cert_domain }}"
         subject_alt_name:
@@ -56,10 +56,10 @@
       community.crypto.x509_certificate:
         path: "{{ nginx_cert_dir }}/server.crt"
         privatekey_path: "{{ nginx_cert_dir }}/server.key"
-        csr_path: {{ tmp_prefix }}.csr
+        csr_path: "{{ tmp_prefix }}.csr"
         provider: ownca
-        ownca_path: {{ tmp_prefix }}-ca.pem
-        ownca_privatekey_path: {{ tmp_prefix }}-ca.key
+        ownca_path: "{{ tmp_prefix }}-ca.pem"
+        ownca_privatekey_path: "{{ tmp_prefix }}-ca.key"
         ownca_not_before: "{{ cert_expired_start }}"
         ownca_not_after: "{{ cert_expired_end }}"
         force: true

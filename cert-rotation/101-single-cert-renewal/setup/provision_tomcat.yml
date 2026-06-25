@@ -48,26 +48,26 @@
     - name: Write CA certificate to temp file
       ansible.builtin.copy:
         content: "{{ vault_secrets.json.data.data.ca_cert | b64decode }}"
-        dest: {{ tmp_prefix }}-ca.pem
+        dest: "{{ tmp_prefix }}-ca.pem"
         mode: '0600'
 
     - name: Write CA private key to temp file
       ansible.builtin.copy:
         content: "{{ vault_secrets.json.data.data.ca_privatekey | b64decode }}"
-        dest: {{ tmp_prefix }}-ca.key
+        dest: "{{ tmp_prefix }}-ca.key"
         mode: '0600'
 
     - name: Generate server private key for Tomcat
       community.crypto.openssl_privatekey:
-        path: {{ tmp_prefix }}-tomcat.key
+        path: "{{ tmp_prefix }}-tomcat.key"
         size: "{{ cert_key_size }}"
         type: RSA
         mode: '0600'
 
     - name: Generate CSR for Tomcat
       community.crypto.openssl_csr:
-        path: {{ tmp_prefix }}-tomcat.csr
-        privatekey_path: {{ tmp_prefix }}-tomcat.key
+        path: "{{ tmp_prefix }}-tomcat.csr"
+        privatekey_path: "{{ tmp_prefix }}-tomcat.key"
         common_name: "{{ cert_domain }}"
         subject_alt_name:
           - "DNS:{{ cert_domain }}"
@@ -80,12 +80,12 @@
 
     - name: Sign expired certificate for Tomcat
       community.crypto.x509_certificate:
-        path: {{ tmp_prefix }}-tomcat.crt
-        privatekey_path: {{ tmp_prefix }}-tomcat.key
-        csr_path: {{ tmp_prefix }}-tomcat.csr
+        path: "{{ tmp_prefix }}-tomcat.crt"
+        privatekey_path: "{{ tmp_prefix }}-tomcat.key"
+        csr_path: "{{ tmp_prefix }}-tomcat.csr"
         provider: ownca
-        ownca_path: {{ tmp_prefix }}-ca.pem
-        ownca_privatekey_path: {{ tmp_prefix }}-ca.key
+        ownca_path: "{{ tmp_prefix }}-ca.pem"
+        ownca_privatekey_path: "{{ tmp_prefix }}-ca.key"
         ownca_not_before: "{{ cert_expired_start }}"
         ownca_not_after: "{{ cert_expired_end }}"
         force: true
@@ -119,12 +119,12 @@
         path: "{{ item }}"
         state: absent
       loop:
-        - {{ tmp_prefix }}-tomcat.key
-        - {{ tmp_prefix }}-tomcat.csr
-        - {{ tmp_prefix }}-tomcat.crt
-        - {{ tmp_prefix }}-tomcat.p12
-        - {{ tmp_prefix }}-ca.pem
-        - {{ tmp_prefix }}-ca.key
+        - "{{ tmp_prefix }}-tomcat.key"
+        - "{{ tmp_prefix }}-tomcat.csr"
+        - "{{ tmp_prefix }}-tomcat.crt"
+        - "{{ tmp_prefix }}-tomcat.p12"
+        - "{{ tmp_prefix }}-ca.pem"
+        - "{{ tmp_prefix }}-ca.key"
 
     - name: Create simple Java HTTPS server
       ansible.builtin.copy:
@@ -193,18 +193,18 @@
     - name: Write CA cert
       ansible.builtin.copy:
         content: "{{ vault_secrets_again.json.data.data.ca_cert | b64decode }}"
-        dest: {{ tmp_prefix }}-ca.pem
+        dest: "{{ tmp_prefix }}-ca.pem"
         mode: '0600'
 
     - name: Write CA key
       ansible.builtin.copy:
         content: "{{ vault_secrets_again.json.data.data.ca_privatekey | b64decode }}"
-        dest: {{ tmp_prefix }}-ca.key
+        dest: "{{ tmp_prefix }}-ca.key"
         mode: '0600'
 
     - name: Generate API server key
       community.crypto.openssl_privatekey:
-        path: {{ tmp_prefix }}-api-server.key
+        path: "{{ tmp_prefix }}-api-server.key"
         size: 2048
         type: RSA
         mode: '0600'
@@ -212,7 +212,7 @@
     - name: Generate API server CSR
       community.crypto.openssl_csr:
         path: /tmp/api-server.csr
-        privatekey_path: {{ tmp_prefix }}-api-server.key
+        privatekey_path: "{{ tmp_prefix }}-api-server.key"
         common_name: "{{ cert_domain }}"
         subject_alt_name:
           - "DNS:{{ cert_domain }}"
@@ -220,12 +220,12 @@
 
     - name: Sign expired API server cert
       community.crypto.x509_certificate:
-        path: {{ tmp_prefix }}-api-server.crt
-        privatekey_path: {{ tmp_prefix }}-api-server.key
+        path: "{{ tmp_prefix }}-api-server.crt"
+        privatekey_path: "{{ tmp_prefix }}-api-server.key"
         csr_path: /tmp/api-server.csr
         provider: ownca
-        ownca_path: {{ tmp_prefix }}-ca.pem
-        ownca_privatekey_path: {{ tmp_prefix }}-ca.key
+        ownca_path: "{{ tmp_prefix }}-ca.pem"
+        ownca_privatekey_path: "{{ tmp_prefix }}-ca.key"
         ownca_not_before: "{{ cert_expired_start }}"
         ownca_not_after: "{{ cert_expired_end }}"
         force: true
