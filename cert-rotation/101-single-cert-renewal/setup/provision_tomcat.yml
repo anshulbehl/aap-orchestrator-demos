@@ -11,6 +11,7 @@
     tomcat_keystore: /opt/tomcat/conf/keystore.jks
     tomcat_port: 8443
     keystore_password: changeit
+    tmp_prefix: "/tmp/tomcat-setup-{{ ansible_date_time.epoch }}"
 
   tasks:
     - name: Install Java
@@ -47,26 +48,26 @@
     - name: Write CA certificate to temp file
       ansible.builtin.copy:
         content: "{{ vault_secrets.json.data.data.ca_cert | b64decode }}"
-        dest: /tmp/ca_cert.pem
+        dest: {{ tmp_prefix }}-ca.pem
         mode: '0600'
 
     - name: Write CA private key to temp file
       ansible.builtin.copy:
         content: "{{ vault_secrets.json.data.data.ca_privatekey | b64decode }}"
-        dest: /tmp/ca_key.pem
+        dest: {{ tmp_prefix }}-ca.key
         mode: '0600'
 
     - name: Generate server private key for Tomcat
       community.crypto.openssl_privatekey:
-        path: /tmp/tomcat.key
+        path: {{ tmp_prefix }}-tomcat.key
         size: "{{ cert_key_size }}"
         type: RSA
         mode: '0600'
 
     - name: Generate CSR for Tomcat
       community.crypto.openssl_csr:
-        path: /tmp/tomcat.csr
-        privatekey_path: /tmp/tomcat.key
+        path: {{ tmp_prefix }}-tomcat.csr
+        privatekey_path: {{ tmp_prefix }}-tomcat.key
         common_name: "{{ cert_domain }}"
         subject_alt_name:
           - "DNS:{{ cert_domain }}"
@@ -79,12 +80,12 @@
 
     - name: Sign expired certificate for Tomcat
       community.crypto.x509_certificate:
-        path: /tmp/tomcat.crt
-        privatekey_path: /tmp/tomcat.key
-        csr_path: /tmp/tomcat.csr
+        path: {{ tmp_prefix }}-tomcat.crt
+        privatekey_path: {{ tmp_prefix }}-tomcat.key
+        csr_path: {{ tmp_prefix }}-tomcat.csr
         provider: ownca
-        ownca_path: /tmp/ca_cert.pem
-        ownca_privatekey_path: /tmp/ca_key.pem
+        ownca_path: {{ tmp_prefix }}-ca.pem
+        ownca_privatekey_path: {{ tmp_prefix }}-ca.key
         ownca_not_before: "{{ cert_expired_start }}"
         ownca_not_after: "{{ cert_expired_end }}"
         force: true
@@ -93,10 +94,10 @@
       ansible.builtin.command:
         cmd: >
           openssl pkcs12 -export
-          -in /tmp/tomcat.crt
-          -inkey /tmp/tomcat.key
-          -certfile /tmp/ca_cert.pem
-          -out /tmp/tomcat.p12
+          -in {{ tmp_prefix }}-tomcat.crt
+          -inkey {{ tmp_prefix }}-tomcat.key
+          -certfile {{ tmp_prefix }}-ca.pem
+          -out {{ tmp_prefix }}-tomcat.p12
           -name tomcat
           -passout pass:{{ keystore_password }}
 
@@ -104,7 +105,7 @@
       ansible.builtin.command:
         cmd: >
           keytool -importkeystore
-          -srckeystore /tmp/tomcat.p12
+          -srckeystore {{ tmp_prefix }}-tomcat.p12
           -srcstoretype PKCS12
           -srcstorepass {{ keystore_password }}
           -destkeystore {{ tomcat_keystore }}
@@ -118,12 +119,12 @@
         path: "{{ item }}"
         state: absent
       loop:
-        - /tmp/tomcat.key
-        - /tmp/tomcat.csr
-        - /tmp/tomcat.crt
-        - /tmp/tomcat.p12
-        - /tmp/ca_cert.pem
-        - /tmp/ca_key.pem
+        - {{ tmp_prefix }}-tomcat.key
+        - {{ tmp_prefix }}-tomcat.csr
+        - {{ tmp_prefix }}-tomcat.crt
+        - {{ tmp_prefix }}-tomcat.p12
+        - {{ tmp_prefix }}-ca.pem
+        - {{ tmp_prefix }}-ca.key
 
     - name: Create simple Java HTTPS server
       ansible.builtin.copy:
@@ -192,18 +193,18 @@
     - name: Write CA cert
       ansible.builtin.copy:
         content: "{{ vault_secrets_again.json.data.data.ca_cert | b64decode }}"
-        dest: /tmp/ca_cert.pem
+        dest: {{ tmp_prefix }}-ca.pem
         mode: '0600'
 
     - name: Write CA key
       ansible.builtin.copy:
         content: "{{ vault_secrets_again.json.data.data.ca_privatekey | b64decode }}"
-        dest: /tmp/ca_key.pem
+        dest: {{ tmp_prefix }}-ca.key
         mode: '0600'
 
     - name: Generate API server key
       community.crypto.openssl_privatekey:
-        path: /tmp/api-server.key
+        path: {{ tmp_prefix }}-api-server.key
         size: 2048
         type: RSA
         mode: '0600'
@@ -211,7 +212,7 @@
     - name: Generate API server CSR
       community.crypto.openssl_csr:
         path: /tmp/api-server.csr
-        privatekey_path: /tmp/api-server.key
+        privatekey_path: {{ tmp_prefix }}-api-server.key
         common_name: "{{ cert_domain }}"
         subject_alt_name:
           - "DNS:{{ cert_domain }}"
@@ -219,24 +220,36 @@
 
     - name: Sign expired API server cert
       community.crypto.x509_certificate:
-        path: /tmp/api-server.crt
-        privatekey_path: /tmp/api-server.key
+        path: {{ tmp_prefix }}-api-server.crt
+        privatekey_path: {{ tmp_prefix }}-api-server.key
         csr_path: /tmp/api-server.csr
         provider: ownca
-        ownca_path: /tmp/ca_cert.pem
-        ownca_privatekey_path: /tmp/ca_key.pem
+        ownca_path: {{ tmp_prefix }}-ca.pem
+        ownca_privatekey_path: {{ tmp_prefix }}-ca.key
         ownca_not_before: "{{ cert_expired_start }}"
         ownca_not_after: "{{ cert_expired_end }}"
         force: true
+
+    - name: Copy cert and key to fixed paths for running service
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        remote_src: true
+        mode: '0600'
+      loop:
+        - { src: "{{ tmp_prefix }}-api-server.crt", dest: /tmp/api-server.crt }
+        - { src: "{{ tmp_prefix }}-api-server.key", dest: /tmp/api-server.key }
 
     - name: Clean up CA files
       ansible.builtin.file:
         path: "{{ item }}"
         state: absent
       loop:
-        - /tmp/ca_cert.pem
-        - /tmp/ca_key.pem
-        - /tmp/api-server.csr
+        - "{{ tmp_prefix }}-ca.pem"
+        - "{{ tmp_prefix }}-ca.key"
+        - "{{ tmp_prefix }}-api-server.csr"
+        - "{{ tmp_prefix }}-api-server.crt"
+        - "{{ tmp_prefix }}-api-server.key"
 
     - name: Reload systemd and start API server
       ansible.builtin.systemd:
