@@ -75,9 +75,9 @@
         path: "{{ item }}"
         state: absent
       loop:
-        - {{ tmp_prefix }}-ca.pem
-        - {{ tmp_prefix }}-ca.key
-        - {{ tmp_prefix }}.csr
+        - "{{ tmp_prefix }}-ca.pem"
+        - "{{ tmp_prefix }}-ca.key"
+        - "{{ tmp_prefix }}.csr"
 
     - name: Start nginx
       ansible.builtin.systemd:
