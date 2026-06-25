@@ -6,20 +6,20 @@
   tasks:
     - name: TLS handshake check
       ansible.builtin.shell: |
-        echo | openssl s_client -connect 127.0.0.1:443 -servername {{ cert_domain }} 2>/dev/null
+        echo | openssl s_client -connect 127.0.0.1:{{ validate_port | default('443') }} -servername {{ cert_domain }} 2>/dev/null
       register: tls_handshake
       changed_when: false
       failed_when: "'Verify return code: 0' not in tls_handshake.stdout and 'Verify return code: 18' not in tls_handshake.stdout and 'Verify return code: 19' not in tls_handshake.stdout and 'Verify return code: 21' not in tls_handshake.stdout"
 
     - name: Get certificate details
       ansible.builtin.shell: |
-        echo | openssl s_client -connect 127.0.0.1:443 -servername {{ cert_domain }} 2>/dev/null | openssl x509 -noout -subject -issuer -dates -serial
+        echo | openssl s_client -connect 127.0.0.1:{{ validate_port | default('443') }} -servername {{ cert_domain }} 2>/dev/null | openssl x509 -noout -subject -issuer -dates -serial
       register: cert_details
       changed_when: false
 
     - name: Get certificate expiry date
       ansible.builtin.shell: |
-        echo | openssl s_client -connect 127.0.0.1:443 -servername {{ cert_domain }} 2>/dev/null | openssl x509 -noout -enddate | cut -d= -f2
+        echo | openssl s_client -connect 127.0.0.1:{{ validate_port | default('443') }} -servername {{ cert_domain }} 2>/dev/null | openssl x509 -noout -enddate | cut -d= -f2
       register: expiry_raw
       changed_when: false
 

@@ -140,24 +140,38 @@
         dest: "{{ tomcat_base }}/start.sh"
         mode: '0755'
 
+    - name: Create API server Python script
+      ansible.builtin.copy:
+        content: |
+          #!/usr/bin/python3
+          import ssl, http.server, socketserver, os
+
+          os.chdir("{{ tomcat_base }}/webapps/ROOT")
+
+          context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+          context.load_cert_chain(
+              certfile="/tmp/api-server.crt",
+              keyfile="/tmp/api-server.key"
+          )
+
+          handler = http.server.SimpleHTTPRequestHandler
+
+          with socketserver.TCPServer(("0.0.0.0", {{ tomcat_port }}), handler) as httpd:
+              httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+              httpd.serve_forever()
+        dest: "{{ tomcat_base }}/api-server.py"
+        mode: '0755'
+
     - name: Create systemd service for the Java app
       ansible.builtin.copy:
         content: |
           [Unit]
-          Description=Demo API Server (Java TLS)
+          Description=Demo API Server (TLS on port {{ tomcat_port }})
           After=network.target
 
           [Service]
           Type=simple
-          ExecStart=/bin/bash -c 'cd {{ tomcat_base }} && python3 -c "
-          import ssl, http.server, socketserver
-          context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-          context.load_cert_chain(certfile=\"/tmp/api-server.crt\", keyfile=\"/tmp/api-server.key\")
-          handler = http.server.SimpleHTTPRequestHandler
-          with socketserver.TCPServer((\"0.0.0.0\", {{ tomcat_port }}), handler) as httpd:
-              httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
-              httpd.serve_forever()
-          "'
+          ExecStart=/usr/bin/python3 {{ tomcat_base }}/api-server.py
           WorkingDirectory={{ tomcat_base }}/webapps/ROOT
           Restart=always
           RestartSec=5
