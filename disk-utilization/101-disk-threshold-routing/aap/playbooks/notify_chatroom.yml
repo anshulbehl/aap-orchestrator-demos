@@ -4,12 +4,10 @@
   connection: local
   gather_facts: false
 
-  vars:
-    mattermost_webhook_url: "{{ mattermost_webhook_url | default('http://44.209.231.244:8065/') }}"
-
   tasks:
     - name: Apply defaults
       ansible.builtin.set_fact:
+        mattermost_webhook_url: "{{ mattermost_webhook_url | default('http://44.209.231.244:8065/') }}"
         notify_host: "{{ notify_host | default('unknown') | string }}"
         disk_mount: "{{ disk_mount | default('unknown') | string }}"
         disk_use_percent: "{{ disk_use_percent | default('unknown') | string }}"
