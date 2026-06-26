@@ -8,6 +8,7 @@
       ansible.builtin.set_fact:
         disk_mount: "{{ disk_mount | default('/') }}"
         disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
+        disk_tier: "{{ disk_tier | default('unknown') }}"
 
     - name: Find dnf cache files
       ansible.builtin.find:
@@ -56,6 +57,7 @@
         data:
           disk_mount: "{{ disk_mount }}"
           disk_use_percent: "{{ disk_use_percent }}"
+          disk_tier: "{{ disk_tier }}"
           notify_host: "{{ ansible_play_hosts | join(',') }}"
           remediation_action: Cleanup Logs
           dnf_cache_removed: "{{ dnf_cache_files.files | default([]) | length }}"
