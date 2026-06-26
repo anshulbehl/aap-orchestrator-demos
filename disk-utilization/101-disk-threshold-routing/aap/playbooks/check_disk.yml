@@ -40,7 +40,20 @@
           critical
           {%- endif -%}
 
-    - name: Publish disk_tier for AO switch
+    - name: Publish disk_tier for AO switch (healthy)
+      ansible.builtin.set_stats:
+        data:
+          disk_mount: "{{ disk_mount }}"
+          disk_tier: "{{ disk_tier }}"
+          disk_use_percent: "{{ disk_use_percent }}"
+          notify_host: "{{ ansible_play_hosts | join(',') }}"
+          remediation_action: No Action Taken
+        per_host: false
+        aggregate: false
+      run_once: true
+      when: disk_tier == 'ok'
+
+    - name: Publish disk_tier for AO switch (elevated)
       ansible.builtin.set_stats:
         data:
           disk_mount: "{{ disk_mount }}"
@@ -50,6 +63,7 @@
         per_host: false
         aggregate: false
       run_once: true
+      when: disk_tier != 'ok'
 
     - name: Show detected disk tier
       ansible.builtin.debug:

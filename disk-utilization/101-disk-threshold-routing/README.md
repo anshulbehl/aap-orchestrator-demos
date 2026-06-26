@@ -10,8 +10,8 @@ Check disk usage
 -------------------------
 <80%     80-95%     >95%
   |         |          |
-Continue   Cleanup   Extend volume
-           logs      or page admin
+ Notify    Cleanup   Extend volume
+ (ok)      logs      or page admin
 ```
 
 ## What you need
@@ -26,9 +26,9 @@ Continue   Cleanup   Extend volume
 | Job template | Playbook |
 |---|---|
 | Check Disk Usage | `check_disk.yml` |
-| Remediate Disk Continue | `remediate_disk_continue.yml` |
 | Remediate Disk Cleanup | `remediate_disk_cleanup.yml` |
 | Remediate Disk Escalate | `remediate_disk_escalate.yml` |
+| Notify Team | `notify_chatroom.yml` |
 
 Use `inventory/hosts.yml` for the target host.
 
@@ -40,7 +40,7 @@ Use `inventory/hosts.yml` for the target host.
 
 | `disk_tier` | Use % | Action |
 |---|---|---|
-| `ok` | < 80% | No action |
+| `ok` | < 80% | No action — notify only |
 | `warn` | 80–95% | Clean package cache and old logs |
 | `critical` | > 95% | Extend volume or page admin |
 
