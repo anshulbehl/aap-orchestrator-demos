@@ -10,19 +10,28 @@
         disk_warn_threshold: "{{ disk_warn_threshold | default(80) }}"
         disk_critical_threshold: "{{ disk_critical_threshold | default(95) }}"
 
-    - name: Get disk use percent for mount
-      ansible.builtin.shell: |
-        set -euo pipefail
-        df -P "{{ disk_mount }}" | awk 'NR==2 {gsub(/%/,"",$5); print $5}'
-      args:
-        executable: /bin/bash
-      register: disk_use_raw
-      changed_when: false
+    - name: Gather mount facts
+      ansible.builtin.setup:
+        gather_subset:
+          - mounts
+
+    - name: Resolve mount from facts
+      ansible.builtin.set_fact:
+        _mounts: "{{ ansible_mounts | selectattr('mount', 'equalto', disk_mount) | list }}"
+
+    - name: Fail when mount is missing
+      ansible.builtin.fail:
+        msg: "Mount {{ disk_mount }} not found on {{ inventory_hostname }}."
+      when: _mounts | length == 0
+
+    - name: Calculate disk use percent for mount
+      ansible.builtin.set_fact:
+        disk_use_percent: "{{ ((_mounts[0].block_used / _mounts[0].block_total) * 100) | int }}"
 
     - name: Bucket disk use into switch tier
       ansible.builtin.set_fact:
         disk_tier: >-
-          {%- set pct = disk_use_raw.stdout | int -%}
+          {%- set pct = disk_use_percent | int -%}
           {%- if pct < (disk_warn_threshold | int) -%}
           ok
           {%- elif pct <= (disk_critical_threshold | int) -%}
@@ -30,7 +39,6 @@
           {%- else -%}
           critical
           {%- endif -%}
-        disk_use_percent: "{{ disk_use_raw.stdout | int }}"
 
     - name: Publish disk_tier for AO switch
       ansible.builtin.set_stats:
