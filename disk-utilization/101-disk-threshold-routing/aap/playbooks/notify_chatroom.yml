@@ -14,48 +14,64 @@
         dnf_cache_removed: "{{ dnf_cache_removed | default('unknown') | string }}"
         log_archives_removed: "{{ log_archives_removed | default('unknown') | string }}"
         notification_summary: >-
-          Disk utilization workflow update for {{ notify_host | default('unknown') | string }}:
-          {{ disk_mount | default('unknown') | string }} at
-          {{ disk_use_percent | default('unknown') | string }}%
-          (tier: {{ disk_tier | default('unknown') | string }})
+          Disk utilization workflow update for {{ notify_host }}:
+          {{ disk_mount }} at {{ disk_use_percent }}% (tier: {{ disk_tier }})
 
     - name: Require Mattermost webhook token
       ansible.builtin.assert:
         that:
           - api_chat_token is defined
-          - api_chat_token | length > 0
+          - api_chat_token | trim | length > 0
         fail_msg: >-
           Set extra var api_chat_token to the incoming webhook path
           (everything after /hooks/ in the Mattermost integration URL).
 
+    - name: Build Mattermost webhook URL
+      ansible.builtin.set_fact:
+        mattermost_webhook_url: >-
+          {{
+            mattermost_webhook_url | default(
+              'http://' ~ (mattermost_server | default('44.209.231.244:8065'))
+              ~ '/hooks/' ~ (api_chat_token | trim),
+              true
+            )
+          }}
+
     - name: Send notification message via Mattermost
-      community.general.mattermost:
-        url: http://{{ mattermost_server | default('44.209.231.244:8065') }}
-        api_key: "{{ api_chat_token }}"
-        text: "{{ notification_summary }}"
-        attachments:
-          - text: "{{ notification_summary }}"
-            color: '#37a3a3'
-            title: Disk Utilization Alert
-            fields:
-              - title: Target Host
-                value: "{{ notify_host }}"
-                short: true
-              - title: Disk Mount
-                value: "{{ disk_mount }}"
-                short: true
-              - title: Disk Use Percent
-                value: "{{ disk_use_percent }}"
-                short: true
-              - title: Disk Tier
-                value: "{{ disk_tier }}"
-                short: true
-              - title: Remediation Action
-                value: "{{ remediation_action }}"
-                short: true
-              - title: DNF Cache Removed
-                value: "{{ dnf_cache_removed }}"
-                short: true
-              - title: Log Archives Removed
-                value: "{{ log_archives_removed }}"
-                short: true
+      ansible.builtin.uri:
+        url: "{{ mattermost_webhook_url }}"
+        method: POST
+        body_format: json
+        body:
+          username: Ansible
+          text: "{{ notification_summary }}"
+          attachments:
+            - fallback: "{{ notification_summary }}"
+              color: '#37a3a3'
+              title: Disk Utilization Alert
+              text: "{{ notification_summary }}"
+              fields:
+                - title: Target Host
+                  value: "{{ notify_host }}"
+                  short: true
+                - title: Disk Mount
+                  value: "{{ disk_mount }}"
+                  short: true
+                - title: Disk Use Percent
+                  value: "{{ disk_use_percent }}"
+                  short: true
+                - title: Disk Tier
+                  value: "{{ disk_tier }}"
+                  short: true
+                - title: Remediation Action
+                  value: "{{ remediation_action }}"
+                  short: true
+                - title: DNF Cache Removed
+                  value: "{{ dnf_cache_removed }}"
+                  short: true
+                - title: Log Archives Removed
+                  value: "{{ log_archives_removed }}"
+                  short: true
+        headers:
+          Content-Type: application/json
+        status_code: [200, 201]
