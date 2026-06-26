@@ -14,3 +14,14 @@
         msg: >-
           ALERT: {{ disk_mount }} is {{ disk_use_percent }}% full.
           Extend volume or page admin.
+
+    - name: Publish remediation results for downstream steps
+      ansible.builtin.set_stats:
+        data:
+          disk_mount: "{{ disk_mount }}"
+          disk_use_percent: "{{ disk_use_percent }}"
+          notify_host: "{{ ansible_play_hosts | join(',') }}"
+          remediation_action: Extend Volume or Page Admin
+        per_host: false
+        aggregate: false
+      run_once: true

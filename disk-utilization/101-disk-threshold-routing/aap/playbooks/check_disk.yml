@@ -46,8 +46,10 @@
           disk_mount: "{{ disk_mount }}"
           disk_tier: "{{ disk_tier }}"
           disk_use_percent: "{{ disk_use_percent }}"
+          notify_host: "{{ ansible_play_hosts | join(',') }}"
         per_host: false
         aggregate: false
+      run_once: true
 
     - name: Show detected disk tier
       ansible.builtin.debug:

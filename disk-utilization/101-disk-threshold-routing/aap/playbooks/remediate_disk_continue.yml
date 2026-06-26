@@ -12,3 +12,14 @@
     - name: Disk usage is healthy
       ansible.builtin.debug:
         msg: "{{ disk_mount }} at {{ disk_use_percent }}% — no action needed."
+
+    - name: Publish remediation results for downstream steps
+      ansible.builtin.set_stats:
+        data:
+          disk_mount: "{{ disk_mount }}"
+          disk_use_percent: "{{ disk_use_percent }}"
+          notify_host: "{{ ansible_play_hosts | join(',') }}"
+          remediation_action: Continue
+        per_host: false
+        aggregate: false
+      run_once: true

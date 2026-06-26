@@ -56,7 +56,10 @@
         data:
           disk_mount: "{{ disk_mount }}"
           disk_use_percent: "{{ disk_use_percent }}"
+          notify_host: "{{ ansible_play_hosts | join(',') }}"
+          remediation_action: Cleanup Logs
           dnf_cache_removed: "{{ dnf_cache_files.files | default([]) | length }}"
           log_archives_removed: "{{ old_log_archives.files | length }}"
         per_host: false
         aggregate: false
+      run_once: true
