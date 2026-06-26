@@ -13,6 +13,9 @@
         remediation_action: "{{ remediation_action | default('unknown') | string }}"
         dnf_cache_removed: "{{ dnf_cache_removed | default('unknown') | string }}"
         log_archives_removed: "{{ log_archives_removed | default('unknown') | string }}"
+
+    - name: Build notification summary
+      ansible.builtin.set_fact:
         notification_summary: >-
           Disk utilization workflow update for {{ notify_host }}:
           {{ disk_mount }} at {{ disk_use_percent }}% (tier: {{ disk_tier }})
