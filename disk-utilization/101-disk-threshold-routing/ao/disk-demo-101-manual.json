@@ -73,14 +73,43 @@
       }
     },
     {
+      "id": "remediate_continue",
+      "type": "aap_job_template",
+      "name": "Continue",
+      "parameters": {
+        "verbosity": 0,
+        "extra_vars": {
+          "disk_mount": "${check_disk.artifacts.disk_mount}",
+          "disk_use_percent": "${check_disk.artifacts.disk_use_percent}",
+          "disk_tier": "${check_disk.artifacts.disk_tier}"
+        },
+        "job_template_id": 1
+      },
+      "settings": {
+        "timeout": 1800,
+        "retry_policy": {
+          "max_retries": 3,
+          "max_interval": 60,
+          "initial_interval": 5,
+          "backoff_coefficient": 2
+        }
+      },
+      "outputs": {
+        "job_id": "${result.job_id}",
+        "job_status": "${result.job_status}",
+        "artifacts": "${result.artifacts}"
+      }
+    },
+    {
       "id": "remediate_cleanup",
       "type": "aap_job_template",
       "name": "Cleanup Logs",
       "parameters": {
         "verbosity": 0,
         "extra_vars": {
-          "disk_mount": "${trigger.disk_mount}",
-          "disk_use_percent": "${check_disk.artifacts.disk_use_percent}"
+          "disk_mount": "${check_disk.artifacts.disk_mount}",
+          "disk_use_percent": "${check_disk.artifacts.disk_use_percent}",
+          "disk_tier": "${check_disk.artifacts.disk_tier}"
         },
         "job_template_id": 1
       },
@@ -106,8 +135,9 @@
       "parameters": {
         "verbosity": 0,
         "extra_vars": {
-          "disk_mount": "${trigger.disk_mount}",
-          "disk_use_percent": "${check_disk.artifacts.disk_use_percent}"
+          "disk_mount": "${check_disk.artifacts.disk_mount}",
+          "disk_use_percent": "${check_disk.artifacts.disk_use_percent}",
+          "disk_tier": "${check_disk.artifacts.disk_tier}"
         },
         "job_template_id": 1
       },
@@ -122,7 +152,8 @@
       },
       "outputs": {
         "job_id": "${result.job_id}",
-        "job_status": "${result.job_status}"
+        "job_status": "${result.job_status}",
+        "artifacts": "${result.artifacts}"
       }
     },
     {
@@ -158,11 +189,11 @@
       "parameters": {
         "verbosity": 0,
         "extra_vars": {
-          "notify_host": "${check_disk.artifacts.notify_host}",
-          "disk_mount": "${check_disk.artifacts.disk_mount}",
-          "disk_use_percent": "${check_disk.artifacts.disk_use_percent}",
-          "disk_tier": "${check_disk.artifacts.disk_tier}",
-          "remediation_action": "${check_disk.artifacts.remediation_action}",
+          "notify_host": "${remediate_continue.artifacts.notify_host}",
+          "disk_mount": "${remediate_continue.artifacts.disk_mount}",
+          "disk_use_percent": "${remediate_continue.artifacts.disk_use_percent}",
+          "disk_tier": "${remediate_continue.artifacts.disk_tier}",
+          "remediation_action": "${remediate_continue.artifacts.remediation_action}",
           "dnf_cache_removed": "${remediate_cleanup.artifacts.dnf_cache_removed}",
           "log_archives_removed": "${remediate_cleanup.artifacts.log_archives_removed}"
         },
@@ -194,7 +225,7 @@
     },
     {
       "from": "route_disk_tier",
-      "to": "notify_team",
+      "to": "remediate_continue",
       "from_port": "ok"
     },
     {
@@ -211,6 +242,10 @@
       "from": "route_disk_tier",
       "to": "remediate_fallback",
       "from_port": "default"
+    },
+    {
+      "from": "remediate_continue",
+      "to": "notify_team"
     },
     {
       "from": "remediate_cleanup",

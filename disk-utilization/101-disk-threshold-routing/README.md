@@ -10,7 +10,7 @@ Check disk usage
 -------------------------
 <80%     80-95%     >95%
   |         |          |
- Notify    Cleanup   Extend volume
+Continue   Cleanup   Extend volume
  (ok)      logs      or page admin
 ```
 
@@ -21,11 +21,12 @@ Check disk usage
 
 ## Setup
 
-**1. Register four job templates** from `aap/playbooks/`:
+**1. Register five job templates** from `aap/playbooks/`:
 
 | Job template | Playbook |
 |---|---|
 | Check Disk Usage | `check_disk.yml` |
+| Remediate Disk Continue | `remediate_disk_continue.yml` |
 | Remediate Disk Cleanup | `remediate_disk_cleanup.yml` |
 | Remediate Disk Escalate | `remediate_disk_escalate.yml` |
 | Notify Team | `notify_chatroom.yml` |
@@ -40,11 +41,13 @@ Use `inventory/hosts.yml` for the target host.
 
 | `disk_tier` | Use % | Action |
 |---|---|---|
-| `ok` | < 80% | No action — notify only |
+| `ok` | < 80% | Continue — publish notify artifacts, no remediation |
 | `warn` | 80–95% | Clean package cache and old logs |
 | `critical` | > 95% | Extend volume or page admin |
 
 The check playbook publishes `disk_tier` via `set_stats`. The switch node reads it — no nested success/failure nodes.
+
+Each remediation branch publishes a full notify artifact bundle via `set_stats`. Map notify extra vars from the remediation node on that branch (`remediate_continue`, `remediate_cleanup`, or `remediate_escalate`).
 
 ## Try each branch
 

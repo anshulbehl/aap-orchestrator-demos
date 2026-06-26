@@ -1,5 +1,5 @@
 ---
-- name: Escalate — disk critically full
+- name: Continue — disk usage healthy
   hosts: "{{ _host | default('all') }}"
   become: true
   gather_facts: false
@@ -8,22 +8,20 @@
       ansible.builtin.set_fact:
         disk_mount: "{{ disk_mount | default('/') }}"
         disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
-        disk_tier: "{{ disk_tier | default('unknown') }}"
+        disk_tier: "{{ disk_tier | default('ok') }}"
 
-    - name: Disk critically full — escalate
+    - name: Disk usage is healthy
       ansible.builtin.debug:
-        msg: >-
-          ALERT: {{ disk_mount }} is {{ disk_use_percent }}% full.
-          Extend volume or page admin.
+        msg: "{{ disk_mount }} at {{ disk_use_percent }}% — no action needed."
 
-    - name: Publish remediation results for downstream steps
+    - name: Publish notify artifacts for downstream steps
       ansible.builtin.set_stats:
         data:
           disk_mount: "{{ disk_mount }}"
           disk_use_percent: "{{ disk_use_percent }}"
           disk_tier: "{{ disk_tier }}"
           notify_host: "{{ ansible_play_hosts | join(',') }}"
-          remediation_action: Extend Volume or Page Admin
+          remediation_action: No Action Taken
         per_host: false
         aggregate: false
       run_once: true
