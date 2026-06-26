@@ -3,10 +3,12 @@
   hosts: "{{ _host | default('all') }}"
   become: true
   gather_facts: true
-  vars:
-    disk_mount: "{{ disk_mount | default('/') }}"
-    disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
   tasks:
+    - name: Apply defaults
+      ansible.builtin.set_fact:
+        disk_mount: "{{ disk_mount | default('/') }}"
+        disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
+
     - name: Clean package manager cache
       ansible.builtin.command:
         cmd: dnf clean all
