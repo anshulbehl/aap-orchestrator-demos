@@ -3,6 +3,10 @@
   hosts: localhost
   connection: local
   gather_facts: false
+
+  vars:
+    mattermost_webhook_url: "{{ lookup('env', 'MATTERMOST_WEBHOOK_URL') | default('', true) }}"
+
   tasks:
     - name: Apply defaults
       ansible.builtin.set_fact:
@@ -19,26 +23,6 @@
         notification_summary: >-
           Disk utilization workflow update for {{ notify_host }}:
           {{ disk_mount }} at {{ disk_use_percent }}% (tier: {{ disk_tier }})
-
-    - name: Require Mattermost webhook token
-      ansible.builtin.assert:
-        that:
-          - api_chat_token is defined
-          - api_chat_token | trim | length > 0
-        fail_msg: >-
-          Set extra var api_chat_token to the incoming webhook path
-          (everything after /hooks/ in the Mattermost integration URL).
-
-    - name: Build Mattermost webhook URL
-      ansible.builtin.set_fact:
-        mattermost_webhook_url: >-
-          {{
-            mattermost_webhook_url | default(
-              'http://' ~ (mattermost_server | default('44.209.231.244:8065'))
-              ~ '/hooks/' ~ (api_chat_token | trim),
-              true
-            )
-          }}
 
     - name: Send notification message via Mattermost
       ansible.builtin.uri:
@@ -78,3 +62,9 @@
         headers:
           Content-Type: application/json
         status_code: [200, 201]
+      when: mattermost_webhook_url | length > 0
+
+    - name: Log notification when Mattermost is not configured
+      ansible.builtin.debug:
+        msg: "{{ notification_summary }}"
+      when: mattermost_webhook_url | length == 0
