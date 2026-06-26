@@ -50,3 +50,13 @@
           {{ disk_mount }} was {{ disk_use_percent }}% full —
           removed {{ dnf_cache_files.files | default([]) | length }} dnf cache entries
           and {{ old_log_archives.files | length }} old log archives.
+
+    - name: Publish cleanup results for downstream steps
+      ansible.builtin.set_stats:
+        data:
+          disk_mount: "{{ disk_mount }}"
+          disk_use_percent: "{{ disk_use_percent }}"
+          dnf_cache_removed: "{{ dnf_cache_files.files | default([]) | length }}"
+          log_archives_removed: "{{ old_log_archives.files | length }}"
+        per_host: false
+        aggregate: false

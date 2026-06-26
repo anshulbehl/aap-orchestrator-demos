@@ -43,8 +43,10 @@
     - name: Publish disk_tier for AO switch
       ansible.builtin.set_stats:
         data:
+          disk_mount: "{{ disk_mount }}"
           disk_tier: "{{ disk_tier }}"
           disk_use_percent: "{{ disk_use_percent }}"
+        per_host: false
         aggregate: false
 
     - name: Show detected disk tier

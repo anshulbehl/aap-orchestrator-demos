@@ -121,7 +121,8 @@
       },
       "outputs": {
         "job_id": "${result.job_id}",
-        "job_status": "${result.job_status}"
+        "job_status": "${result.job_status}",
+        "artifacts": "${result.artifacts}"
       }
     },
     {
