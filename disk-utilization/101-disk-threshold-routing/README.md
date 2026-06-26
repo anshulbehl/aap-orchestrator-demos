@@ -32,7 +32,7 @@ Continue   Cleanup   Extend volume
 
 Use `inventory/hosts.yml` for the target host.
 
-**2. Import the workflow** — `ao/disk-demo-101-manual.json` into Orchestrator. Set your AAP credential on each job node (replace `REPLACE_WITH_AAP_CREDENTIAL_ID`).
+**2. Import the workflow** — `ao/disk-demo-101-manual.json` into Orchestrator. Open each AAP job node and set `job_template_id` to the matching job template in your Controller (IDs are environment-specific; `1` is a placeholder).
 
 **3. Launch** from the AO UI. Default input is `disk_mount=/`.
 

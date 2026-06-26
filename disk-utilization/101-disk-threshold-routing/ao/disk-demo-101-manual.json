@@ -1,13 +1,8 @@
 {
-  "name": "Disk Demo 101 - Threshold Routing",
-  "description": "Check disk usage and route by disk_tier: ok (<80%), warn (80-95%), critical (>95%). Switch node demonstrates three business decisions from one observation.",
-  "schema_version": "2.0.0",
   "triggers": [
     {
-      "id": "trigger",
-      "name": "Disk Check",
+      "id": "trigger_manual",
       "type": "manual_trigger",
-      "position": { "x": 0, "y": 0 },
       "parameters": {
         "input_schema": {
           "type": "object",
@@ -25,78 +20,233 @@
   "nodes": [
     {
       "id": "check_disk",
-      "name": "Check Disk Usage",
       "type": "aap_job_template",
-      "position": { "x": 320, "y": 0 },
+      "name": "Check Disk Usage",
       "parameters": {
-        "credential_id": "REPLACE_WITH_AAP_CREDENTIAL_ID",
-        "job_template_name": "Check Disk Usage",
-        "organization_name": "Default",
+        "verbosity": 0,
         "extra_vars": {
           "disk_mount": "${trigger.disk_mount}"
+        },
+        "job_template_id": 1
+      },
+      "settings": {
+        "timeout": 1800,
+        "retry_policy": {
+          "max_retries": 3,
+          "max_interval": 60,
+          "initial_interval": 5,
+          "backoff_coefficient": 2
         }
+      },
+      "outputs": {
+        "job_id": "${result.job_id}",
+        "created": "${result.created}",
+        "started": "${result.started}",
+        "finished": "${result.finished}",
+        "artifacts": "${result.artifacts}",
+        "job_status": "${result.job_status}"
       }
     },
     {
       "id": "route_disk_tier",
-      "name": "Route by disk_tier",
       "type": "switch",
-      "position": { "x": 640, "y": 0 },
+      "name": "Route by disk_tier",
       "parameters": {
-        "expression": "${check_disk.result.artifacts.disk_tier}"
+        "cases": [
+          {
+            "port": "ok",
+            "label": "<80%",
+            "condition": "${check_disk.artifacts.disk_tier} == 'ok'"
+          },
+          {
+            "port": "warn",
+            "label": "80-95%",
+            "condition": "${check_disk.artifacts.disk_tier} == 'warn'"
+          },
+          {
+            "port": "critical",
+            "label": ">95%",
+            "condition": "${check_disk.artifacts.disk_tier} == 'critical'"
+          }
+        ],
+        "default_port": "default"
       }
     },
     {
-      "id": "continue",
+      "id": "remediate_continue",
+      "type": "aap_job_template",
       "name": "Continue",
-      "type": "aap_job_template",
-      "position": { "x": 960, "y": -100 },
       "parameters": {
-        "credential_id": "REPLACE_WITH_AAP_CREDENTIAL_ID",
-        "job_template_name": "Remediate Disk Continue",
-        "organization_name": "Default",
+        "verbosity": 0,
         "extra_vars": {
           "disk_mount": "${trigger.disk_mount}",
-          "disk_use_percent": "${check_disk.result.artifacts.disk_use_percent}"
+          "disk_use_percent": "${check_disk.artifacts.disk_use_percent}"
+        },
+        "job_template_id": 1
+      },
+      "settings": {
+        "timeout": 1800,
+        "retry_policy": {
+          "max_retries": 3,
+          "max_interval": 60,
+          "initial_interval": 5,
+          "backoff_coefficient": 2
         }
+      },
+      "outputs": {
+        "job_id": "${result.job_id}",
+        "job_status": "${result.job_status}"
       }
     },
     {
-      "id": "cleanup",
+      "id": "remediate_cleanup",
+      "type": "aap_job_template",
       "name": "Cleanup Logs",
-      "type": "aap_job_template",
-      "position": { "x": 960, "y": 0 },
       "parameters": {
-        "credential_id": "REPLACE_WITH_AAP_CREDENTIAL_ID",
-        "job_template_name": "Remediate Disk Cleanup",
-        "organization_name": "Default",
+        "verbosity": 0,
         "extra_vars": {
           "disk_mount": "${trigger.disk_mount}",
-          "disk_use_percent": "${check_disk.result.artifacts.disk_use_percent}"
+          "disk_use_percent": "${check_disk.artifacts.disk_use_percent}"
+        },
+        "job_template_id": 1
+      },
+      "settings": {
+        "timeout": 1800,
+        "retry_policy": {
+          "max_retries": 3,
+          "max_interval": 60,
+          "initial_interval": 5,
+          "backoff_coefficient": 2
         }
+      },
+      "outputs": {
+        "job_id": "${result.job_id}",
+        "job_status": "${result.job_status}"
       }
     },
     {
-      "id": "escalate",
-      "name": "Extend Volume or Page Admin",
+      "id": "remediate_escalate",
       "type": "aap_job_template",
-      "position": { "x": 960, "y": 100 },
+      "name": "Extend Volume or Page Admin",
       "parameters": {
-        "credential_id": "REPLACE_WITH_AAP_CREDENTIAL_ID",
-        "job_template_name": "Remediate Disk Escalate",
-        "organization_name": "Default",
+        "verbosity": 0,
         "extra_vars": {
           "disk_mount": "${trigger.disk_mount}",
-          "disk_use_percent": "${check_disk.result.artifacts.disk_use_percent}"
+          "disk_use_percent": "${check_disk.artifacts.disk_use_percent}"
+        },
+        "job_template_id": 1
+      },
+      "settings": {
+        "timeout": 1800,
+        "retry_policy": {
+          "max_retries": 3,
+          "max_interval": 60,
+          "initial_interval": 5,
+          "backoff_coefficient": 2
         }
+      },
+      "outputs": {
+        "job_id": "${result.job_id}",
+        "job_status": "${result.job_status}"
+      }
+    },
+    {
+      "id": "remediate_fallback",
+      "type": "aap_job_template",
+      "name": "Unknown Tier Fallback",
+      "parameters": {
+        "verbosity": 0,
+        "extra_vars": {
+          "disk_mount": "${trigger.disk_mount}",
+          "disk_use_percent": "${check_disk.artifacts.disk_use_percent}"
+        },
+        "job_template_id": 1
+      },
+      "settings": {
+        "timeout": 1800,
+        "retry_policy": {
+          "max_retries": 3,
+          "max_interval": 60,
+          "initial_interval": 5,
+          "backoff_coefficient": 2
+        }
+      },
+      "outputs": {
+        "job_id": "${result.job_id}",
+        "job_status": "${result.job_status}"
+      }
+    },
+    {
+      "id": "notify_team",
+      "type": "aap_job_template",
+      "name": "Notify Team",
+      "parameters": {
+        "verbosity": 0,
+        "extra_vars": {
+          "disk_mount": "${trigger.disk_mount}",
+          "disk_use_percent": "${check_disk.artifacts.disk_use_percent}"
+        },
+        "job_template_id": 1
+      },
+      "settings": {
+        "timeout": 1800,
+        "retry_policy": {
+          "max_retries": 3,
+          "max_interval": 60,
+          "initial_interval": 5,
+          "backoff_coefficient": 2
+        }
+      },
+      "outputs": {
+        "job_id": "${result.job_id}",
+        "job_status": "${result.job_status}"
       }
     }
   ],
   "edges": [
-    { "from": "trigger", "to": "check_disk" },
-    { "from": "check_disk", "to": "route_disk_tier" },
-    { "from": "route_disk_tier", "to": "continue", "from_port": "ok" },
-    { "from": "route_disk_tier", "to": "cleanup", "from_port": "warn" },
-    { "from": "route_disk_tier", "to": "escalate", "from_port": "critical" }
+    {
+      "from": "trigger_manual",
+      "to": "check_disk"
+    },
+    {
+      "from": "check_disk",
+      "to": "route_disk_tier"
+    },
+    {
+      "from": "route_disk_tier",
+      "to": "remediate_continue",
+      "from_port": "ok"
+    },
+    {
+      "from": "route_disk_tier",
+      "to": "remediate_cleanup",
+      "from_port": "warn"
+    },
+    {
+      "from": "route_disk_tier",
+      "to": "remediate_escalate",
+      "from_port": "critical"
+    },
+    {
+      "from": "route_disk_tier",
+      "to": "remediate_fallback",
+      "from_port": "default"
+    },
+    {
+      "from": "remediate_continue",
+      "to": "notify_team"
+    },
+    {
+      "from": "remediate_cleanup",
+      "to": "notify_team"
+    },
+    {
+      "from": "remediate_escalate",
+      "to": "notify_team"
+    },
+    {
+      "from": "remediate_fallback",
+      "to": "notify_team"
+    }
   ]
 }

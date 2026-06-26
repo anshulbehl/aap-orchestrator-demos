@@ -1,6 +1,6 @@
 ---
 - name: Check disk utilization
-  hosts: "{{ _host | default('linux') }}"
+  hosts: "{{ _host | default('all') }}"
   become: true
   gather_facts: false
   tasks:
