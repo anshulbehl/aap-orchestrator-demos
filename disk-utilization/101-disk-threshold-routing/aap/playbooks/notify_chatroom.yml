@@ -5,7 +5,7 @@
   gather_facts: false
 
   vars:
-    mattermost_webhook_url: "{{ lookup('env', 'MATTERMOST_WEBHOOK_URL') | default('', true) }}"
+    mattermost_webhook_url: "{{ mattermost_webhook_url | default('http://44.209.231.244:8065/') }}"
 
   tasks:
     - name: Apply defaults
@@ -62,9 +62,8 @@
         headers:
           Content-Type: application/json
         status_code: [200, 201]
-      when: mattermost_webhook_url | length > 0
 
-    - name: Log notification when Mattermost is not configured
+    - name: Log notification when Mattermost URL is not set
       ansible.builtin.debug:
         msg: "{{ notification_summary }}"
-      when: mattermost_webhook_url | length == 0
+      when: mattermost_webhook_url | default('') | length == 0
