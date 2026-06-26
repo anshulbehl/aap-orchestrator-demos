@@ -1,0 +1,180 @@
+---
+- name: Provision lab services (Splunk, Mattermost, LiteLLM) on bastion/VM
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    splunk_password: "{{ lookup('env', 'SPLUNK_PASSWORD') | default('changeme123', true) }}"
+    splunk_hec_token: "{{ lookup('env', 'SPLUNK_HEC_TOKEN') | default('auto', true) }}"
+    mattermost_password: "{{ lookup('env', 'MATTERMOST_PASSWORD') | default('changeme123', true) }}"
+    litellm_api_key: "{{ lookup('env', 'LITELLM_API_KEY') | default('sk-demo-key', true) }}"
+    litellm_anthropic_key: "{{ lookup('env', 'ANTHROPIC_API_KEY') | default('CHANGEME', true) }}"
+    cert_demo_host: "{{ lookup('env', 'CERT_DEMO_HOST') | default('certdemo.demoredhat.com', true) }}"
+
+  tasks:
+    - name: Start Splunk container
+      containers.podman.podman_container:
+        name: splunk
+        image: docker.io/splunk/splunk:latest
+        state: started
+        restart_policy: always
+        ports:
+          - "8000:8000"
+          - "8088:8088"
+          - "8089:8089"
+        env:
+          SPLUNK_START_ARGS: "--accept-license"
+          SPLUNK_PASSWORD: "{{ splunk_password }}"
+      become: true
+
+    - name: Wait for Splunk to be ready
+      ansible.builtin.uri:
+        url: "http://localhost:8000"
+        status_code: [200, 303]
+      register: splunk_check
+      retries: 30
+      delay: 10
+      until: splunk_check.status in [200, 303]
+
+    - name: Create Splunk HEC token
+      ansible.builtin.shell: |
+        podman exec splunk curl -sk https://localhost:8089/servicesNS/admin/splunk_httpinput/data/inputs/http \
+          -u "admin:{{ splunk_password }}" \
+          -d name=cert-monitor \
+          -d output_mode=json 2>/dev/null | python3 -c "
+        import sys,json
+        d = json.load(sys.stdin)
+        print(d['entry'][0]['content']['token'])
+        " 2>/dev/null || echo "{{ splunk_hec_token }}"
+      become: true
+      register: hec_token_result
+      changed_when: false
+
+    - name: Start Mattermost container
+      containers.podman.podman_container:
+        name: mattermost
+        image: docker.io/mattermost/mattermost-preview:latest
+        state: started
+        restart_policy: always
+        ports:
+          - "8065:8065"
+      become: true
+
+    - name: Wait for Mattermost to be ready
+      ansible.builtin.uri:
+        url: "http://localhost:8065/api/v4/system/ping"
+        status_code: 200
+      register: mm_check
+      retries: 30
+      delay: 10
+      until: mm_check.status == 200
+
+    - name: Create LiteLLM config
+      ansible.builtin.copy:
+        content: |
+          model_list:
+            - model_name: claude-sonnet-4-6
+              litellm_params:
+                model: anthropic/claude-sonnet-4-6-20250514
+                api_key: {{ litellm_anthropic_key }}
+
+          general_settings:
+            master_key: {{ litellm_api_key }}
+        dest: /tmp/litellm_config.yaml
+        mode: '0600'
+
+    - name: Start LiteLLM proxy container
+      containers.podman.podman_container:
+        name: litellm
+        image: ghcr.io/berriai/litellm:main-latest
+        state: started
+        restart_policy: always
+        ports:
+          - "4000:4000"
+        volumes:
+          - "/tmp/litellm_config.yaml:/app/config.yaml:ro"
+        command: "--config /app/config.yaml --port 4000"
+      become: true
+
+    - name: Wait for LiteLLM to be ready
+      ansible.builtin.uri:
+        url: "http://localhost:4000/health"
+        status_code: 200
+      register: litellm_check
+      retries: 15
+      delay: 5
+      until: litellm_check.status == 200
+
+    - name: Create cert monitoring script
+      ansible.builtin.copy:
+        content: |
+          #!/bin/bash
+          for ENTRY in "{{ cert_demo_host }}:443:nginx:pem" "{{ cert_demo_host }}:8443:api-server:java_keystore"; do
+            HOST=$(echo $ENTRY | cut -d: -f1)
+            PORT=$(echo $ENTRY | cut -d: -f2)
+            SVC=$(echo $ENTRY | cut -d: -f3)
+            CTYPE=$(echo $ENTRY | cut -d: -f4)
+
+            ENDDATE=$(echo | openssl s_client -connect ${HOST}:${PORT} -servername ${HOST} 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
+
+            if [ -z "$ENDDATE" ]; then
+              echo "{\"host\": \"${HOST}\", \"orig_host\": \"${HOST}\", \"cert_cn\": \"${HOST}\", \"service\": \"${SVC}\", \"port\": ${PORT}, \"cert_type\": \"${CTYPE}\", \"status\": \"unreachable\", \"days_remaining\": -999}"
+              continue
+            fi
+
+            EXPIRY_EPOCH=$(date -d "${ENDDATE}" +%s 2>/dev/null)
+            NOW_EPOCH=$(date +%s)
+            DAYS_REMAINING=$(( (EXPIRY_EPOCH - NOW_EPOCH) / 86400 ))
+
+            if [ ${DAYS_REMAINING} -le 0 ]; then
+              STATUS="expired"
+            elif [ ${DAYS_REMAINING} -le 7 ]; then
+              STATUS="critical"
+            elif [ ${DAYS_REMAINING} -le 30 ]; then
+              STATUS="warning"
+            else
+              STATUS="valid"
+            fi
+
+            echo "{\"host\": \"${HOST}\", \"orig_host\": \"${HOST}\", \"cert_cn\": \"${HOST}\", \"service\": \"${SVC}\", \"port\": ${PORT}, \"cert_type\": \"${CTYPE}\", \"status\": \"${STATUS}\", \"days_remaining\": ${DAYS_REMAINING}, \"expiry_date\": \"${ENDDATE}\", \"issuer\": \"Demo Certificate Authority\"}"
+          done
+        dest: /tmp/check_cert.sh
+        mode: '0755'
+
+    - name: Create Splunk push script
+      ansible.builtin.copy:
+        content: |
+          #!/bin/bash
+          HEC_TOKEN="{{ hec_token_result.stdout | default(splunk_hec_token) }}"
+          /tmp/check_cert.sh | while read RESULT; do
+            curl -sk https://localhost:8088/services/collector/event \
+              -H "Authorization: Splunk ${HEC_TOKEN}" \
+              -d "{\"event\": ${RESULT}, \"sourcetype\": \"cert_monitor\", \"index\": \"main\"}" > /dev/null 2>&1
+          done
+        dest: /tmp/push_cert_to_splunk.sh
+        mode: '0755'
+
+    - name: Setup cron for cert monitoring (every minute)
+      ansible.builtin.cron:
+        name: "cert monitor push to splunk"
+        job: "/tmp/push_cert_to_splunk.sh"
+
+    - name: Display setup summary
+      ansible.builtin.debug:
+        msg:
+          - "Lab Services Provisioned"
+          - ""
+          - "Splunk:      http://localhost:8000  (admin / {{ splunk_password }})"
+          - "Mattermost:  http://localhost:8065"
+          - "LiteLLM:     http://localhost:4000  (key: {{ litellm_api_key }})"
+          - ""
+          - "HEC Token:   {{ hec_token_result.stdout | default('check Splunk UI') }}"
+          - ""
+          - "Cert monitoring cron is active (every minute)"
+          - ""
+          - "Next steps:"
+          - "  1. Create Mattermost user and incoming webhook"
+          - "  2. Create Splunk alert: index=main sourcetype=cert_monitor days_remaining<7 earliest=-5m | head 1"
+          - "  3. Set alert webhook action to AO webhook URL"
+          - "  4. Configure AO AI credential with LiteLLM URL http://<this-host>:4000/v1 and key {{ litellm_api_key }}"

@@ -1,17 +1,17 @@
-# Certificate Rotation Demos
+# Certificate Lifecycle Management Demos
 
-Automated certificate lifecycle management using Ansible Automation Platform and Automation Orchestrator.
+AI-driven certificate lifecycle management using Automation Orchestrator. The AI agent discovers available job templates, analyzes the certificate type and history, selects the correct renewal strategy, and routes intelligently without hardcoded logic.
 
-## Levels
+## Demos
 
-| Level | Demo | Description |
-|-------|------|-------------|
-| [101](101-single-cert-renewal/) | Single Cert Renewal | One VM, one expired cert, one renewal. Proves the end-to-end flow. |
-| [201](201-risk-based-routing/) | Risk-Based Routing | Multiple services with different cert types. AI classifies risk, workflow routes accordingly. |
-| [301](301-proactive-assessment/) | Proactive Assessment | Scheduled scanning, AI classification, auto-remediation for low risk, monitoring integration. |
+| Level | Demo | What It Shows |
+|---|---|---|
+| [101](101-cert-lifecycle/) | Intelligent Cert Lifecycle | Two cert types (PEM + Java keystore), AI routing, Splunk integration, operator approval |
+| [201](201-risk-based-routing/) | Risk-Based Routing | Coming soon |
+| [301](301-proactive-assessment/) | Proactive Assessment | Coming soon |
 
 ## The Story
 
-A monitoring alert fires: a TLS certificate has expired (or is about to). The automation platform receives the alert, an AI agent analyzes the certificate and selects the correct renewal strategy, an operator approves the plan, and the certificate is renewed and validated automatically.
+A Splunk alert fires when a TLS certificate expires. Automation Orchestrator receives it, an AI agent analyzes the certificate details and queries AAP to select the correct renewal template, an operator approves, and AAP renews and validates automatically.
 
-At the 101 level, this is a simple linear flow. At 201, the AI agent assesses risk and the workflow routes low-risk renewals to auto-fix while escalating high-risk ones with blast radius context. At 301, the system scans proactively on a schedule so alerts rarely fire at all.
+What makes it intelligent: the same workflow handles a PEM certificate on nginx and a Java keystore on an API server. The agent figures out which is which and selects the right template. No conditions. No hardcoded routing.
