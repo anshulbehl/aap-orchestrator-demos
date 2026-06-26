@@ -3,6 +3,10 @@
   hosts: "{{ _host | default('all') }}"
   become: true
   gather_facts: false
+  vars:
+    disk_mount: "{{ disk_mount | default('/') }}"
+    disk_warn_threshold: "{{ disk_warn_threshold | default(80) }}"
+    disk_critical_threshold: "{{ disk_critical_threshold | default(95) }}"
   tasks:
     - name: Get disk use percent for mount
       ansible.builtin.shell: |

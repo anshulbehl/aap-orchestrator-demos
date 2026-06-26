@@ -1,8 +1,11 @@
 ---
 - name: Continue — disk usage healthy
-  hosts: "{{ _host | default('linux') }}"
+  hosts: "{{ _host | default('all') }}"
   become: true
   gather_facts: false
+  vars:
+    disk_mount: "{{ disk_mount | default('/') }}"
+    disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
   tasks:
     - name: Disk usage is healthy
       ansible.builtin.debug:

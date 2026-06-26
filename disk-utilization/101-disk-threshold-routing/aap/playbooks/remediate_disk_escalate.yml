@@ -1,8 +1,11 @@
 ---
 - name: Escalate — disk critically full
-  hosts: "{{ _host | default('linux') }}"
+  hosts: "{{ _host | default('all') }}"
   become: true
   gather_facts: false
+  vars:
+    disk_mount: "{{ disk_mount | default('/') }}"
+    disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
   tasks:
     - name: Disk critically full — escalate
       ansible.builtin.debug:
