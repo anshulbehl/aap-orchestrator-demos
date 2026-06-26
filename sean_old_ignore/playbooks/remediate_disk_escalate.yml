@@ -1,0 +1,6 @@
+---
+- name: Escalate — disk critically full
+  hosts: all
+  gather_facts: false
+  roles:
+    - remediate_disk_escalate

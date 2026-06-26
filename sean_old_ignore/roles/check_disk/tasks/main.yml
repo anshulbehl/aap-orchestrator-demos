@@ -1,0 +1,33 @@
+---
+- name: Get disk use percent for mount
+  ansible.builtin.shell: |
+    set -euo pipefail
+    df -P "{{ disk_mount }}" | awk 'NR==2 {gsub(/%/,"",$5); print $5}'
+  args:
+    executable: /bin/bash
+  register: disk_use_percent
+  changed_when: false
+
+- name: Bucket disk use into switch tier
+  ansible.builtin.set_fact:
+    disk_tier: >-
+      {%- set pct = disk_use_percent.stdout | int -%}
+      {%- if pct < 80 -%}
+      ok
+      {%- elif pct <= 95 -%}
+      warn
+      {%- else -%}
+      critical
+      {%- endif -%}
+    disk_use_percent: "{{ disk_use_percent.stdout | int }}"
+
+- name: Publish disk_tier for workflow switch
+  ansible.builtin.set_stats:
+    data:
+      disk_tier: "{{ disk_tier }}"
+      disk_use_percent: "{{ disk_use_percent }}"
+    aggregate: false
+
+- name: Show detected disk tier
+  ansible.builtin.debug:
+    msg: "{{ disk_mount }} is {{ disk_use_percent }}% full → disk_tier={{ disk_tier }}"

@@ -1,0 +1,6 @@
+---
+- name: Disk critically full — escalate
+  ansible.builtin.debug:
+    msg: >-
+      ALERT: {{ disk_mount }} is {{ disk_use_percent }}% full.
+      Extend volume or page admin.

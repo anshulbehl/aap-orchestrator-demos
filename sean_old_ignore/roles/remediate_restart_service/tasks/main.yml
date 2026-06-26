@@ -1,0 +1,16 @@
+---
+- name: Collect recent journal entries for failed service
+  ansible.builtin.command:
+    cmd: journalctl -u {{ service_name }} -n 50 --no-pager
+  register: service_journal
+  changed_when: false
+
+- name: Show journal excerpt
+  ansible.builtin.debug:
+    msg: "{{ service_journal.stdout_lines }}"
+
+- name: Restart failed service
+  ansible.builtin.service:
+    name: "{{ service_name }}"
+    state: restarted
+    enabled: true

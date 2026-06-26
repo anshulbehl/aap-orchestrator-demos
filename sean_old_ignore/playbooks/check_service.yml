@@ -1,0 +1,6 @@
+---
+- name: Check service health
+  hosts: all
+  gather_facts: false
+  roles:
+    - check_service

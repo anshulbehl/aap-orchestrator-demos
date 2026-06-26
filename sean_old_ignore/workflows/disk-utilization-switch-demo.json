@@ -1,0 +1,147 @@
+{
+  "name": "disk-utilization-switch-demo",
+  "description": "Check disk usage on a mount and route by disk_tier: ok (<80%), warn (80-95%), critical (>95%). Import into Automation Orchestrator, then bind each Controller Job step to the matching playbook job template from this repo.",
+  "schema_version": "2.0.0",
+  "edges": [
+    {
+      "from": "activity_trigger_disk",
+      "to": "activity_check_disk"
+    },
+    {
+      "from": "activity_check_disk",
+      "to": "activity_switch_disk_tier"
+    },
+    {
+      "from": "activity_switch_disk_tier",
+      "to": "activity_remediate_continue",
+      "case": "ok"
+    },
+    {
+      "from": "activity_switch_disk_tier",
+      "to": "activity_remediate_cleanup",
+      "case": "warn"
+    },
+    {
+      "from": "activity_switch_disk_tier",
+      "to": "activity_remediate_escalate",
+      "case": "critical"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "activity_trigger_disk",
+      "name": "Trigger",
+      "type": "manual_trigger",
+      "config": {
+        "inputs": [
+          {
+            "name": "disk_mount",
+            "type": "string",
+            "default": "/",
+            "description": "Filesystem mount to check (e.g. / or /var)"
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "activity_check_disk",
+      "name": "Check Disk Usage",
+      "type": "controller_job",
+      "config": {
+        "job_template": "check_disk",
+        "extra_vars": {
+          "disk_mount": "{{ trigger.disk_mount }}"
+        }
+      },
+      "settings": {},
+      "position": {
+        "x": 280,
+        "y": 0
+      }
+    },
+    {
+      "id": "activity_switch_disk_tier",
+      "name": "Route by disk_tier",
+      "type": "switch",
+      "config": {
+        "expression": "{{ jobs.check_disk.disk_tier }}",
+        "cases": [
+          {
+            "value": "ok",
+            "target": "activity_remediate_continue"
+          },
+          {
+            "value": "warn",
+            "target": "activity_remediate_cleanup"
+          },
+          {
+            "value": "critical",
+            "target": "activity_remediate_escalate"
+          }
+        ]
+      },
+      "settings": {},
+      "position": {
+        "x": 560,
+        "y": 0
+      }
+    },
+    {
+      "id": "activity_remediate_continue",
+      "name": "Continue",
+      "type": "controller_job",
+      "config": {
+        "job_template": "remediate_disk_continue",
+        "extra_vars": {
+          "disk_mount": "{{ trigger.disk_mount }}",
+          "disk_use_percent": "{{ jobs.check_disk.disk_use_percent }}"
+        }
+      },
+      "settings": {},
+      "position": {
+        "x": 840,
+        "y": -80
+      }
+    },
+    {
+      "id": "activity_remediate_cleanup",
+      "name": "Cleanup Logs",
+      "type": "controller_job",
+      "config": {
+        "job_template": "remediate_disk_cleanup",
+        "extra_vars": {
+          "disk_mount": "{{ trigger.disk_mount }}",
+          "disk_use_percent": "{{ jobs.check_disk.disk_use_percent }}"
+        }
+      },
+      "settings": {},
+      "position": {
+        "x": 840,
+        "y": 0
+      }
+    },
+    {
+      "id": "activity_remediate_escalate",
+      "name": "Extend Volume or Page Admin",
+      "type": "controller_job",
+      "config": {
+        "job_template": "remediate_disk_escalate",
+        "extra_vars": {
+          "disk_mount": "{{ trigger.disk_mount }}",
+          "disk_use_percent": "{{ jobs.check_disk.disk_use_percent }}"
+        }
+      },
+      "settings": {},
+      "position": {
+        "x": 840,
+        "y": 80
+      }
+    }
+  ]
+}

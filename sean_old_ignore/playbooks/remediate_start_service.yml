@@ -1,0 +1,6 @@
+---
+- name: Start inactive service
+  hosts: all
+  gather_facts: false
+  roles:
+    - remediate_start_service

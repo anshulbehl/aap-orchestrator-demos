@@ -1,0 +1,11 @@
+---
+- name: Install service package
+  ansible.builtin.package:
+    name: "{{ service_package }}"
+    state: present
+
+- name: Enable and start service
+  ansible.builtin.service:
+    name: "{{ service_name }}"
+    state: started
+    enabled: true

@@ -1,0 +1,6 @@
+---
+- name: Continue — disk usage healthy
+  hosts: all
+  gather_facts: false
+  roles:
+    - remediate_disk_continue
