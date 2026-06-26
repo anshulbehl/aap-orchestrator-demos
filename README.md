@@ -16,6 +16,7 @@ Automation Orchestrator is the workflow engine in AAP that lets you build visual
 | Use Case | Description | Status |
 |---|---|---|
 | [cert-rotation/](cert-rotation/) | AI-driven certificate lifecycle management with intelligent routing | Active |
+| [disk-utilization/](disk-utilization/) | Switch-based disk threshold routing (continue / cleanup / escalate) | Active |
 | [incident-remediation/](incident-remediation/) | AI-assisted incident triage and auto-remediation | Coming soon |
 
 ## How Demos Are Organized
@@ -112,5 +113,8 @@ aap-orchestrator-demos/
 │   ├── 101-cert-lifecycle/            # Active demo
 │   ├── 201-risk-based-routing/        # Coming soon
 │   └── 301-proactive-assessment/      # Coming soon
+├── disk-utilization/
+│   ├── README.md
+│   └── 101-disk-threshold-routing/    # Active demo
 └── incident-remediation/              # Coming soon
 ```

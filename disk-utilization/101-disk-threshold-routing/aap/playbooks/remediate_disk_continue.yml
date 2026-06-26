@@ -1,0 +1,9 @@
+---
+- name: Continue — disk usage healthy
+  hosts: "{{ _host | default('linux') }}"
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Disk usage is healthy
+      ansible.builtin.debug:
+        msg: "{{ disk_mount }} at {{ disk_use_percent }}% — no action needed."

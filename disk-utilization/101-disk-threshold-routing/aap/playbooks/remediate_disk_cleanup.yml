@@ -1,0 +1,23 @@
+---
+- name: Cleanup logs — disk usage elevated
+  hosts: "{{ _host | default('linux') }}"
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Clean package manager cache
+      ansible.builtin.command:
+        cmd: dnf clean all
+      register: dnf_clean
+      changed_when: "'Removed' in dnf_clean.stdout or dnf_clean.rc == 0"
+      failed_when: false
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    - name: Remove rotated logs older than seven days
+      ansible.builtin.command:
+        cmd: find /var/log -type f -name '*.gz' -mtime +7 -delete
+      changed_when: false
+      failed_when: false
+
+    - name: Log cleanup completed
+      ansible.builtin.debug:
+        msg: "{{ disk_mount }} was {{ disk_use_percent }}% full — ran log and cache cleanup."

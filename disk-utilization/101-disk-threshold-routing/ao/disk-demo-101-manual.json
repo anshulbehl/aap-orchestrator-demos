@@ -1,0 +1,102 @@
+{
+  "name": "Disk Demo 101 - Threshold Routing",
+  "description": "Check disk usage and route by disk_tier: ok (<80%), warn (80-95%), critical (>95%). Switch node demonstrates three business decisions from one observation.",
+  "schema_version": "2.0.0",
+  "triggers": [
+    {
+      "id": "trigger",
+      "name": "Disk Check",
+      "type": "manual_trigger",
+      "position": { "x": 0, "y": 0 },
+      "parameters": {
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "disk_mount": {
+              "type": "string",
+              "default": "/",
+              "description": "Filesystem mount to check (e.g. / or /var)"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "check_disk",
+      "name": "Check Disk Usage",
+      "type": "aap_job_template",
+      "position": { "x": 320, "y": 0 },
+      "parameters": {
+        "credential_id": "REPLACE_WITH_AAP_CREDENTIAL_ID",
+        "job_template_name": "Check Disk Usage",
+        "organization_name": "Default",
+        "extra_vars": {
+          "disk_mount": "${trigger.disk_mount}"
+        }
+      }
+    },
+    {
+      "id": "route_disk_tier",
+      "name": "Route by disk_tier",
+      "type": "switch",
+      "position": { "x": 640, "y": 0 },
+      "parameters": {
+        "expression": "${check_disk.result.artifacts.disk_tier}"
+      }
+    },
+    {
+      "id": "continue",
+      "name": "Continue",
+      "type": "aap_job_template",
+      "position": { "x": 960, "y": -100 },
+      "parameters": {
+        "credential_id": "REPLACE_WITH_AAP_CREDENTIAL_ID",
+        "job_template_name": "Remediate Disk Continue",
+        "organization_name": "Default",
+        "extra_vars": {
+          "disk_mount": "${trigger.disk_mount}",
+          "disk_use_percent": "${check_disk.result.artifacts.disk_use_percent}"
+        }
+      }
+    },
+    {
+      "id": "cleanup",
+      "name": "Cleanup Logs",
+      "type": "aap_job_template",
+      "position": { "x": 960, "y": 0 },
+      "parameters": {
+        "credential_id": "REPLACE_WITH_AAP_CREDENTIAL_ID",
+        "job_template_name": "Remediate Disk Cleanup",
+        "organization_name": "Default",
+        "extra_vars": {
+          "disk_mount": "${trigger.disk_mount}",
+          "disk_use_percent": "${check_disk.result.artifacts.disk_use_percent}"
+        }
+      }
+    },
+    {
+      "id": "escalate",
+      "name": "Extend Volume or Page Admin",
+      "type": "aap_job_template",
+      "position": { "x": 960, "y": 100 },
+      "parameters": {
+        "credential_id": "REPLACE_WITH_AAP_CREDENTIAL_ID",
+        "job_template_name": "Remediate Disk Escalate",
+        "organization_name": "Default",
+        "extra_vars": {
+          "disk_mount": "${trigger.disk_mount}",
+          "disk_use_percent": "${check_disk.result.artifacts.disk_use_percent}"
+        }
+      }
+    }
+  ],
+  "edges": [
+    { "from": "trigger", "to": "check_disk" },
+    { "from": "check_disk", "to": "route_disk_tier" },
+    { "from": "route_disk_tier", "to": "continue", "from_port": "ok" },
+    { "from": "route_disk_tier", "to": "cleanup", "from_port": "warn" },
+    { "from": "route_disk_tier", "to": "escalate", "from_port": "critical" }
+  ]
+}

@@ -1,0 +1,4 @@
+---
+disk_mount: /
+disk_warn_threshold: 80
+disk_critical_threshold: 95
