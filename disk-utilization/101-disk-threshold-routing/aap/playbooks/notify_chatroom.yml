@@ -6,20 +6,35 @@
   tasks:
     - name: Apply defaults
       ansible.builtin.set_fact:
-        notify_host: "{{ notify_host | default('unknown') }}"
-        disk_mount: "{{ disk_mount | default('unknown') }}"
-        disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
-        disk_tier: "{{ disk_tier | default('unknown') }}"
-        remediation_action: "{{ remediation_action | default('unknown') }}"
-        dnf_cache_removed: "{{ dnf_cache_removed | default('unknown') }}"
-        log_archives_removed: "{{ log_archives_removed | default('unknown') }}"
+        notify_host: "{{ notify_host | default('unknown') | string }}"
+        disk_mount: "{{ disk_mount | default('unknown') | string }}"
+        disk_use_percent: "{{ disk_use_percent | default('unknown') | string }}"
+        disk_tier: "{{ disk_tier | default('unknown') | string }}"
+        remediation_action: "{{ remediation_action | default('unknown') | string }}"
+        dnf_cache_removed: "{{ dnf_cache_removed | default('unknown') | string }}"
+        log_archives_removed: "{{ log_archives_removed | default('unknown') | string }}"
+        notification_summary: >-
+          Disk utilization workflow update for {{ notify_host | default('unknown') | string }}:
+          {{ disk_mount | default('unknown') | string }} at
+          {{ disk_use_percent | default('unknown') | string }}%
+          (tier: {{ disk_tier | default('unknown') | string }})
+
+    - name: Require Mattermost webhook token
+      ansible.builtin.assert:
+        that:
+          - api_chat_token is defined
+          - api_chat_token | length > 0
+        fail_msg: >-
+          Set extra var api_chat_token to the incoming webhook path
+          (everything after /hooks/ in the Mattermost integration URL).
 
     - name: Send notification message via Mattermost
       community.general.mattermost:
         url: http://{{ mattermost_server | default('44.209.231.244:8065') }}
         api_key: "{{ api_chat_token }}"
+        text: "{{ notification_summary }}"
         attachments:
-          - text: "Disk utilization workflow update for {{ notify_host }}"
+          - text: "{{ notification_summary }}"
             color: '#37a3a3'
             title: Disk Utilization Alert
             fields:
