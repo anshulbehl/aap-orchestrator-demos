@@ -9,20 +9,44 @@
         disk_mount: "{{ disk_mount | default('/') }}"
         disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
 
-    - name: Clean package manager cache
-      ansible.builtin.command:
-        cmd: dnf clean all
-      register: dnf_clean
-      changed_when: "'Removed' in dnf_clean.stdout or dnf_clean.rc == 0"
-      failed_when: false
+    - name: Find dnf cache files
+      ansible.builtin.find:
+        paths: /var/cache/dnf
+        hidden: true
+        file_type: any
+      register: dnf_cache_files
       when: ansible_facts['os_family'] == 'RedHat'
 
-    - name: Remove rotated logs older than seven days
-      ansible.builtin.command:
-        cmd: find /var/log -type f -name '*.gz' -mtime +7 -delete
-      changed_when: false
-      failed_when: false
+    - name: Remove dnf cache files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ dnf_cache_files.files | default([]) }}"
+      loop_control:
+        label: "{{ item.path }}"
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    - name: Find old rotated log archives
+      ansible.builtin.find:
+        paths: /var/log
+        patterns: "*.gz"
+        age: 7d
+        age_stamp: mtime
+        recurse: true
+        file_type: file
+      register: old_log_archives
+
+    - name: Remove old rotated log archives
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ old_log_archives.files }}"
+      loop_control:
+        label: "{{ item.path }}"
 
     - name: Log cleanup completed
       ansible.builtin.debug:
-        msg: "{{ disk_mount }} was {{ disk_use_percent }}% full — ran log and cache cleanup."
+        msg: >-
+          {{ disk_mount }} was {{ disk_use_percent }}% full —
+          removed {{ dnf_cache_files.files | default([]) | length }} dnf cache entries
+          and {{ old_log_archives.files | length }} old log archives.
