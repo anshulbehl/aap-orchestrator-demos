@@ -15,6 +15,7 @@
     timeout: 2
   register: _imds_token
   failed_when: false
+  check_mode: false
   when: discovered_ec2_instance_id | default('') | length == 0
 
 - name: Get EC2 instance ID from instance metadata
@@ -26,6 +27,7 @@
     timeout: 2
   register: _imds_instance_id
   failed_when: false
+  check_mode: false
   when:
     - discovered_ec2_instance_id | default('') | length == 0
     - _imds_token.status | default(-1) == 200
@@ -39,6 +41,7 @@
     timeout: 2
   register: _imds_region
   failed_when: false
+  check_mode: false
   when:
     - discovered_ec2_instance_id | default('') | length == 0
     - _imds_token.status | default(-1) == 200

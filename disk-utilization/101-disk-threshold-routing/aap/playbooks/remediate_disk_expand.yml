@@ -69,6 +69,14 @@
         volume_size_before_gb: "{{ _volume_info.volumes[0].size }}"
         volume_size_after_gb: "{{ _volume_info.volumes[0].size + (disk_expand_gb | int) }}"
 
+    - name: Preview EBS expansion (check mode)
+      ansible.builtin.debug:
+        msg: >-
+          [check mode] Would expand {{ ec2_volume_id }} for {{ ec2_instance_id }}
+          ({{ target_host }}) from {{ volume_size_before_gb }} GiB
+          to {{ volume_size_after_gb }} GiB.
+      when: ansible_check_mode
+
     - name: Expand EBS volume
       amazon.aws.ec2_vol:
         id: "{{ ec2_volume_id }}"
@@ -77,6 +85,7 @@
         region: "{{ aws_region }}"
         modify_volume: true
       register: _volume_modify
+      when: not ansible_check_mode
 
     - name: Wait for EBS volume modification to complete
       amazon.aws.ec2_vol_info:
@@ -92,6 +101,7 @@
         ) in ['completed', 'optimizing']
       retries: 30
       delay: 10
+      when: not ansible_check_mode
 
     - name: Show AWS volume expansion result
       ansible.builtin.debug:
@@ -99,6 +109,7 @@
           Expanded {{ ec2_volume_id }} on {{ ec2_instance_id }}
           ({{ target_host }}) from {{ volume_size_before_gb }} GiB
           to {{ volume_size_after_gb }} GiB.
+      when: not ansible_check_mode
 
 - name: Grow partition and filesystem on Linux host
   hosts: "{{ _host | default('all') }}"
@@ -119,12 +130,14 @@
         cmd: findmnt -n -o SOURCE {{ disk_mount }}
       register: _root_source
       changed_when: false
+      check_mode: false
 
     - name: Resolve parent disk for partition
       ansible.builtin.command:
         cmd: lsblk -no PKNAME {{ _root_source.stdout | trim }}
       register: _root_disk_cmd
       changed_when: false
+      check_mode: false
 
     - name: Set growpart targets
       ansible.builtin.set_fact:
@@ -140,6 +153,13 @@
             )
           }}
 
+    - name: Preview partition and filesystem grow (check mode)
+      ansible.builtin.debug:
+        msg: >-
+          [check mode] Would run growpart {{ _root_disk }} {{ _root_partition_num }}
+          and xfs_growfs {{ disk_mount }}.
+      when: ansible_check_mode
+
     - name: Grow partition to use expanded EBS volume
       ansible.builtin.command:
         argv:
@@ -149,18 +169,21 @@
       register: _growpart
       changed_when: "'CHANGED' in _growpart.stdout"
       failed_when: _growpart.rc != 0 and "'NOCHANGE' not in _growpart.stdout"
+      when: not ansible_check_mode
 
     - name: Grow XFS filesystem on mount
       ansible.builtin.command:
         cmd: xfs_growfs {{ disk_mount }}
       register: _xfs_grow
       changed_when: true
+      when: not ansible_check_mode
 
     - name: Show filesystem size after grow
       ansible.builtin.command:
         cmd: df -hT {{ disk_mount }}
       register: _df_after
       changed_when: false
+      check_mode: false
 
     - name: Display expanded filesystem
       ansible.builtin.debug:
@@ -182,3 +205,4 @@
         per_host: false
         aggregate: false
       run_once: true
+      when: not ansible_check_mode
