@@ -27,7 +27,7 @@
         "extra_vars": {
           "disk_mount": "${trigger.disk_mount}"
         },
-        "job_template_id": 1
+        "job_template_id": 115
       },
       "settings": {
         "timeout": 1800,
@@ -83,7 +83,7 @@
           "disk_use_percent": "${check_disk.artifacts.disk_use_percent}",
           "disk_tier": "${check_disk.artifacts.disk_tier}"
         },
-        "job_template_id": 1
+        "job_template_id": 118
       },
       "settings": {
         "timeout": 1800,
@@ -111,25 +111,7 @@
           "disk_use_percent": "${check_disk.artifacts.disk_use_percent}",
           "disk_tier": "${check_disk.artifacts.disk_tier}"
         },
-        "job_template_id": 1
-      },
-      "settings": {
-        "timeout": 1800,
-        "retry_policy": {
-          "max_retries": 3,
-          "max_interval": 60,
-          "initial_interval": 5,
-          "backoff_coefficient": 2
-        }
-      },
-      "outputs": {
-        "job_id": "${result.job_id}",
-        "job_status": "${result.job_status}",
-        "artifacts": "${result.artifacts}"
-      }
-    },
-    {
-      "id": "remediate_expand",
+        "job_template_id": 116
       "type": "aap_job_template",
       "name": "Expand EBS Volume",
       "parameters": {
@@ -139,25 +121,7 @@
           "disk_use_percent": "${check_disk.artifacts.disk_use_percent}",
           "disk_tier": "${check_disk.artifacts.disk_tier}"
         },
-        "job_template_id": 1
-      },
-      "settings": {
-        "timeout": 1800,
-        "retry_policy": {
-          "max_retries": 3,
-          "max_interval": 60,
-          "initial_interval": 5,
-          "backoff_coefficient": 2
-        }
-      },
-      "outputs": {
-        "job_id": "${result.job_id}",
-        "job_status": "${result.job_status}",
-        "artifacts": "${result.artifacts}"
-      }
-    },
-    {
-      "id": "remediate_fallback",
+        "job_template_id": 119
       "type": "aap_job_template",
       "name": "Unknown Tier Fallback",
       "parameters": {
@@ -166,7 +130,7 @@
           "disk_mount": "${trigger.disk_mount}",
           "disk_use_percent": "${check_disk.artifacts.disk_use_percent}"
         },
-        "job_template_id": 1
+        "job_template_id": 118
       },
       "settings": {
         "timeout": 1800,
@@ -197,7 +161,7 @@
           "dnf_cache_removed": "${remediate_cleanup.artifacts.dnf_cache_removed}",
           "log_archives_removed": "${remediate_cleanup.artifacts.log_archives_removed}"
         },
-        "job_template_id": 1
+        "job_template_id": 117
       },
       "settings": {
         "timeout": 1800,
