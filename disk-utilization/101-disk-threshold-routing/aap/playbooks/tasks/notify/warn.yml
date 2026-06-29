@@ -1,29 +1,21 @@
 ---
-- name: Build Mattermost attachment (warning)
+- name: Build Mattermost attachment (warning — cleanup)
   ansible.builtin.set_fact:
     mattermost_attachments:
-      - text: "Disk utilization workflow update for {{ notify_host }}"
+      - text: >-
+          {{ notify_host }}: cleaned up {{ disk_mount }}
+          ({{ disk_use_percent_before }}% → {{ disk_use_percent_after }}%).
         color: '#f39c12'
-        title: Disk Utilization Warning
+        title: Warning — Disk Cleanup
         fields:
-          - title: Target Host
-            value: "{{ notify_host }}"
+          - title: Space Freed
+            value: "{{ space_freed_mb }} MB"
             short: true
-          - title: Disk Mount
-            value: "{{ disk_mount }}"
+          - title: DNF Cache
+            value: "{{ dnf_cache_removed }} files ({{ dnf_cache_freed_mb }} MB)"
             short: true
-          - title: Disk Use Percent
-            value: "{{ disk_use_percent }}"
-            short: true
-          - title: Disk Tier
-            value: "{{ disk_tier }}"
-            short: true
-          - title: Remediation Action
-            value: "{{ remediation_action }}"
-            short: true
-          - title: DNF Cache Removed
-            value: "{{ dnf_cache_removed }}"
-            short: true
-          - title: Log Archives Removed
-            value: "{{ log_archives_removed }}"
-            short: true
+          - title: Log Archives
+            value: >-
+              {{ log_archives_removed }} files ({{ logs_freed_mb }} MB,
+              older than {{ log_retention_days }} days)
+            short: false

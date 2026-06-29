@@ -1,32 +1,22 @@
 ---
-- name: Build Mattermost attachment (critical — volume expanded)
+- name: Build Mattermost attachment (critical — disk expanded)
   ansible.builtin.set_fact:
     mattermost_attachments:
-      - text: "Disk critically full on {{ notify_host }} — EBS volume expanded and filesystem grown."
-        color: '#e74c3c'
-        title: Disk Utilization Critical
+      - text: >-
+          {{ notify_host }}: expanding EBS volume on {{ disk_mount }}
+          (was {{ disk_use_percent }}% full).
+        color: '#9b59b6'
+        title: Critical — Disk Expanded
         fields:
-          - title: Target Host
-            value: "{{ notify_host }}"
+          - title: Action
+            value: Expand EBS volume and grow filesystem
+            short: false
+          - title: Volume Before
+            value: "{{ volume_size_before_gb }} GiB"
             short: true
-          - title: Disk Mount
-            value: "{{ disk_mount }}"
+          - title: Volume After
+            value: "{{ volume_size_after_gb }} GiB"
             short: true
-          - title: Disk Use Percent
-            value: "{{ disk_use_percent }}"
-            short: true
-          - title: Disk Tier
-            value: "{{ disk_tier }}"
-            short: true
-          - title: Remediation Action
-            value: "{{ remediation_action }}"
-            short: true
-          - title: EBS Expand (GiB)
-            value: "{{ disk_expand_gb }}"
-            short: true
-          - title: Volume Before (GiB)
-            value: "{{ volume_size_before_gb }}"
-            short: true
-          - title: Volume After (GiB)
-            value: "{{ volume_size_after_gb }}"
+          - title: Added
+            value: "{{ disk_expand_gb }} GiB"
             short: true

@@ -11,6 +11,28 @@
         disk_tier: "{{ disk_tier | default('unknown') }}"
         log_retention_days: "{{ log_retention_days | default(90) | int }}"
 
+    - name: Capture disk usage before cleanup
+      ansible.builtin.command:
+        cmd: df -P {{ disk_mount }}
+      register: _df_before
+      changed_when: false
+      check_mode: false
+
+    - name: Parse disk usage before cleanup
+      ansible.builtin.set_fact:
+        disk_use_percent_before: >-
+          {{
+            _df_before.stdout_lines[1].split()[4] | regex_replace('%', '')
+            if (_df_before.stdout_lines | length) > 1
+            else disk_use_percent
+          }}
+        _disk_used_kb_before: >-
+          {{
+            _df_before.stdout_lines[1].split()[2] | int
+            if (_df_before.stdout_lines | length) > 1
+            else 0
+          }}
+
     - name: Find dnf cache files
       ansible.builtin.find:
         paths: /var/cache/dnf
@@ -67,23 +89,69 @@
     - name: Log cleanup completed
       ansible.builtin.debug:
         msg: >-
-          {{ disk_mount }} was {{ disk_use_percent }}% full —
+          {{ disk_mount }} was {{ disk_use_percent_before }}% full —
           removed {{ dnf_cache_files.files | default([]) | length }} dnf cache entries,
           {{ old_log_archives_gz.files | default([]) | length }} compressed logs,
           and {{ old_log_archives_plain.files | default([]) | length }} uncompressed rotated logs
           older than {{ log_retention_days }} days.
 
+    - name: Capture disk usage after cleanup
+      ansible.builtin.command:
+        cmd: df -P {{ disk_mount }}
+      register: _df_after
+      changed_when: false
+      check_mode: false
+
+    - name: Calculate cleanup savings
+      ansible.builtin.set_fact:
+        disk_use_percent_after: >-
+          {{
+            _df_after.stdout_lines[1].split()[4] | regex_replace('%', '')
+            if (_df_after.stdout_lines | length) > 1
+            else disk_use_percent_before
+          }}
+        _disk_used_kb_after: >-
+          {{
+            _df_after.stdout_lines[1].split()[2] | int
+            if (_df_after.stdout_lines | length) > 1
+            else _disk_used_kb_before
+          }}
+        space_freed_mb: >-
+          {{
+            (
+              ((_disk_used_kb_before | int) - (_disk_used_kb_after | int)) / 1024
+            ) | round(1)
+          }}
+        dnf_cache_freed_mb: >-
+          {{
+            (
+              (dnf_cache_files.files | default([]) | map(attribute='size') | sum | default(0))
+              / 1048576
+            ) | round(1)
+          }}
+        logs_freed_mb: >-
+          {{
+            (
+              (old_logs_to_remove | map(attribute='size') | sum | default(0)) / 1048576
+            ) | round(1)
+          }}
+
     - name: Publish cleanup results for downstream steps
       ansible.builtin.set_stats:
         data:
           disk_mount: "{{ disk_mount }}"
-          disk_use_percent: "{{ disk_use_percent }}"
+          disk_use_percent: "{{ disk_use_percent_after }}"
+          disk_use_percent_before: "{{ disk_use_percent_before }}"
+          disk_use_percent_after: "{{ disk_use_percent_after }}"
           disk_tier: "{{ disk_tier }}"
           notify_host: "{{ ansible_play_hosts | join(',') }}"
           remediation_action: Cleanup Logs
           log_retention_days: "{{ log_retention_days }}"
+          space_freed_mb: "{{ space_freed_mb }}"
           dnf_cache_removed: "{{ dnf_cache_files.files | default([]) | length }}"
+          dnf_cache_freed_mb: "{{ dnf_cache_freed_mb }}"
           log_archives_removed: "{{ old_logs_to_remove | length }}"
+          logs_freed_mb: "{{ logs_freed_mb }}"
           log_archives_gz_removed: "{{ old_log_archives_gz.files | default([]) | length }}"
           log_archives_plain_removed: "{{ old_log_archives_plain.files | default([]) | length }}"
         per_host: false
