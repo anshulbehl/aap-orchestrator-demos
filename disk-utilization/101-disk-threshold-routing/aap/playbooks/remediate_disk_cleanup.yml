@@ -48,7 +48,18 @@
       loop: "{{ dnf_cache_files.files | default([]) }}"
       loop_control:
         label: "{{ item.path }}"
-      when: ansible_facts['os_family'] == 'RedHat'
+      when:
+        - ansible_facts['os_family'] == 'RedHat'
+        - not ansible_check_mode
+
+    - name: Preview dnf cache cleanup (check mode)
+      ansible.builtin.debug:
+        msg: >-
+          [check mode] Would remove {{ dnf_cache_files.files | default([]) | length }}
+          dnf cache entries from /var/cache/dnf.
+      when:
+        - ansible_check_mode
+        - ansible_facts['os_family'] == 'RedHat'
 
     - name: Find old compressed log archives
       ansible.builtin.find:
@@ -85,6 +96,14 @@
       loop: "{{ old_logs_to_remove }}"
       loop_control:
         label: "{{ item.path }}"
+      when: not ansible_check_mode
+
+    - name: Preview log archive cleanup (check mode)
+      ansible.builtin.debug:
+        msg: >-
+          [check mode] Would remove {{ old_logs_to_remove | length }} log archives
+          older than {{ log_retention_days }} days.
+      when: ansible_check_mode
 
     - name: Log cleanup completed
       ansible.builtin.debug:
@@ -102,7 +121,7 @@
       changed_when: false
       check_mode: false
 
-    - name: Calculate cleanup savings
+    - name: Parse disk usage after cleanup
       ansible.builtin.set_fact:
         disk_use_percent_after: >-
           {{
@@ -116,6 +135,9 @@
             if (_df_after.stdout_lines | length) > 1
             else _disk_used_kb_before
           }}
+
+    - name: Calculate cleanup savings
+      ansible.builtin.set_fact:
         space_freed_mb: >-
           {{
             (
