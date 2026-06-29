@@ -3,13 +3,13 @@
   ansible.builtin.set_fact:
     mattermost_attachments:
       - text: >-
-          {{ notify_host }}: cleaned up {{ disk_mount }}
-          ({{ disk_use_percent_before }}% → {{ disk_use_percent_after }}%).
+          {{ notify_host }}: removed {{ total_reclaimed_mb }} MB from {{ disk_mount }}
+          (usage {{ disk_use_percent_before }}% → {{ disk_use_percent_after }}%).
         color: '#f39c12'
         title: Warning — Disk Cleanup
         fields:
-          - title: Space Freed
-            value: "{{ space_freed_mb }} MB"
+          - title: Total Reclaimed
+            value: "{{ total_reclaimed_mb }} MB"
             short: true
           - title: DNF Cache
             value: "{{ dnf_cache_removed }} files ({{ dnf_cache_freed_mb }} MB)"

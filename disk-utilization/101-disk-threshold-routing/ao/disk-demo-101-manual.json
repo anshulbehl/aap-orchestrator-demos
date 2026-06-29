@@ -195,7 +195,7 @@
           "disk_tier": "${check_disk.artifacts.disk_tier}",
           "disk_use_percent_before": "${remediate_cleanup.artifacts.disk_use_percent_before}",
           "disk_use_percent_after": "${remediate_cleanup.artifacts.disk_use_percent_after}",
-          "space_freed_mb": "${remediate_cleanup.artifacts.space_freed_mb}",
+          "total_reclaimed_mb": "${remediate_cleanup.artifacts.total_reclaimed_mb}",
           "dnf_cache_removed": "${remediate_cleanup.artifacts.dnf_cache_removed}",
           "dnf_cache_freed_mb": "${remediate_cleanup.artifacts.dnf_cache_freed_mb}",
           "log_archives_removed": "${remediate_cleanup.artifacts.log_archives_removed}",

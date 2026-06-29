@@ -15,7 +15,7 @@
         log_archives_removed: "{{ log_archives_removed | default('unknown') | string }}"
         disk_use_percent_before: "{{ disk_use_percent_before | default(disk_use_percent | default('unknown')) | string }}"
         disk_use_percent_after: "{{ disk_use_percent_after | default('unknown') | string }}"
-        space_freed_mb: "{{ space_freed_mb | default('unknown') | string }}"
+        total_reclaimed_mb: "{{ total_reclaimed_mb | default('unknown') | string }}"
         dnf_cache_freed_mb: "{{ dnf_cache_freed_mb | default('unknown') | string }}"
         logs_freed_mb: "{{ logs_freed_mb | default('unknown') | string }}"
         log_retention_days: "{{ log_retention_days | default('90') | string }}"

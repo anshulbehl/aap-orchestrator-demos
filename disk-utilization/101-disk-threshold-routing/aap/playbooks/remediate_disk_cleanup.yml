@@ -138,12 +138,6 @@
 
     - name: Calculate cleanup savings
       ansible.builtin.set_fact:
-        space_freed_mb: >-
-          {{
-            (
-              ((_disk_used_kb_before | int) - (_disk_used_kb_after | int)) / 1024
-            ) | round(1)
-          }}
         dnf_cache_freed_mb: >-
           {{
             (
@@ -158,6 +152,16 @@
             ) | round(1)
           }}
 
+    - name: Calculate reclaimed and mount usage change
+      ansible.builtin.set_fact:
+        total_reclaimed_mb: "{{ (dnf_cache_freed_mb | float) + (logs_freed_mb | float) | round(1) }}"
+        mount_usage_change_mb: >-
+          {{
+            (
+              ((_disk_used_kb_before | int) - (_disk_used_kb_after | int)) / 1024
+            ) | round(1)
+          }}
+
     - name: Publish cleanup results for downstream steps
       ansible.builtin.set_stats:
         data:
@@ -169,7 +173,8 @@
           notify_host: "{{ ansible_play_hosts | join(',') }}"
           remediation_action: Cleanup Logs
           log_retention_days: "{{ log_retention_days }}"
-          space_freed_mb: "{{ space_freed_mb }}"
+          total_reclaimed_mb: "{{ total_reclaimed_mb }}"
+          mount_usage_change_mb: "{{ mount_usage_change_mb }}"
           dnf_cache_removed: "{{ dnf_cache_files.files | default([]) | length }}"
           dnf_cache_freed_mb: "{{ dnf_cache_freed_mb }}"
           log_archives_removed: "{{ old_logs_to_remove | length }}"
