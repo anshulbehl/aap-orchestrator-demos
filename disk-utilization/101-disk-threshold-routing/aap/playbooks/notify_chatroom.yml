@@ -13,90 +13,18 @@
         remediation_action: "{{ remediation_action | default('unknown') | string }}"
         dnf_cache_removed: "{{ dnf_cache_removed | default('unknown') | string }}"
         log_archives_removed: "{{ log_archives_removed | default('unknown') | string }}"
+        disk_expand_gb: "{{ disk_expand_gb | default('unknown') | string }}"
+        volume_size_before_gb: "{{ volume_size_before_gb | default('unknown') | string }}"
+        volume_size_after_gb: "{{ volume_size_after_gb | default('unknown') | string }}"
 
-    - name: Build Mattermost attachment (healthy)
-      ansible.builtin.set_fact:
-        mattermost_attachments:
-          - text: "Disk check completed for {{ notify_host }} — no remediation required."
-            color: '#2ecc71'
-            title: Disk Utilization OK
-            fields:
-              - title: Target Host
-                value: "{{ notify_host }}"
-                short: true
-              - title: Disk Mount
-                value: "{{ disk_mount }}"
-                short: true
-              - title: Disk Use Percent
-                value: "{{ disk_use_percent }}"
-                short: true
-              - title: Disk Tier
-                value: "{{ disk_tier }}"
-                short: true
-              - title: Remediation Action
-                value: "{{ remediation_action }}"
-                short: true
-      when: disk_tier == 'ok'
-
-    - name: Build Mattermost attachment (warn or critical)
-      ansible.builtin.set_fact:
-        mattermost_attachments:
-          - text: "Disk utilization workflow update for {{ notify_host }}"
-            color: "{{ '#e74c3c' if disk_tier == 'critical' else '#f39c12' }}"
-            title: "{{ 'Disk Utilization Critical' if disk_tier == 'critical' else 'Disk Utilization Warning' }}"
-            fields:
-              - title: Target Host
-                value: "{{ notify_host }}"
-                short: true
-              - title: Disk Mount
-                value: "{{ disk_mount }}"
-                short: true
-              - title: Disk Use Percent
-                value: "{{ disk_use_percent }}"
-                short: true
-              - title: Disk Tier
-                value: "{{ disk_tier }}"
-                short: true
-              - title: Remediation Action
-                value: "{{ remediation_action }}"
-                short: true
-              - title: DNF Cache Removed
-                value: "{{ dnf_cache_removed }}"
-                short: true
-              - title: Log Archives Removed
-                value: "{{ log_archives_removed }}"
-                short: true
-      when: disk_tier in ['warn', 'critical']
-
-    - name: Build Mattermost attachment (fallback)
-      ansible.builtin.set_fact:
-        mattermost_attachments:
-          - text: "Disk utilization workflow update for {{ notify_host }}"
-            color: '#37a3a3'
-            title: Disk Utilization Alert
-            fields:
-              - title: Target Host
-                value: "{{ notify_host }}"
-                short: true
-              - title: Disk Mount
-                value: "{{ disk_mount }}"
-                short: true
-              - title: Disk Use Percent
-                value: "{{ disk_use_percent }}"
-                short: true
-              - title: Disk Tier
-                value: "{{ disk_tier }}"
-                short: true
-              - title: Remediation Action
-                value: "{{ remediation_action }}"
-                short: true
-              - title: DNF Cache Removed
-                value: "{{ dnf_cache_removed }}"
-                short: true
-              - title: Log Archives Removed
-                value: "{{ log_archives_removed }}"
-                short: true
-      when: disk_tier not in ['ok', 'warn', 'critical']
+    - name: Include tier-specific notification template
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_first_found:
+        - files:
+            - "{{ playbook_dir }}/tasks/notify/{{ disk_tier }}.yml"
+          skip: true
+        - files:
+            - "{{ playbook_dir }}/tasks/notify/unsupported.yml"
 
     - name: Send notification message via Mattermost
       community.general.mattermost:

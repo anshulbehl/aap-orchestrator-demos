@@ -129,9 +129,9 @@
       }
     },
     {
-      "id": "remediate_escalate",
+      "id": "remediate_expand",
       "type": "aap_job_template",
-      "name": "Extend Volume or Page Admin",
+      "name": "Expand EBS Volume",
       "parameters": {
         "verbosity": 0,
         "extra_vars": {
@@ -235,7 +235,7 @@
     },
     {
       "from": "route_disk_tier",
-      "to": "remediate_escalate",
+      "to": "remediate_expand",
       "from_port": "critical"
     },
     {
@@ -252,7 +252,7 @@
       "to": "notify_team"
     },
     {
-      "from": "remediate_escalate",
+      "from": "remediate_expand",
       "to": "notify_team"
     },
     {

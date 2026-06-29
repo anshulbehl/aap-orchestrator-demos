@@ -1,0 +1,168 @@
+---
+- name: Expand EBS volume in AWS
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    target_host: "{{ _host | default(groups['linux'][0] | default('disk-demo-vm')) }}"
+  tasks:
+    - name: Apply defaults
+      ansible.builtin.set_fact:
+        disk_mount: "{{ disk_mount | default('/') }}"
+        disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
+        disk_tier: "{{ disk_tier | default('critical') }}"
+        aws_region: "{{ aws_region | default(hostvars[target_host].aws_region | default('us-east-1')) }}"
+        ec2_instance_id: "{{ ec2_instance_id | default(hostvars[target_host].ec2_instance_id | default('')) }}"
+        ec2_root_device_name: "{{ ec2_root_device_name | default('/dev/sda1') }}"
+        disk_expand_gb: "{{ disk_expand_gb | default(5) | int }}"
+
+    - name: Fail when EC2 instance ID is missing
+      ansible.builtin.fail:
+        msg: >-
+          ec2_instance_id is required. Set it in inventory for {{ target_host }}
+          or pass it as an extra var.
+      when: ec2_instance_id | length == 0
+
+    - name: Gather EC2 instance info
+      amazon.aws.ec2_instance_info:
+        instance_ids:
+          - "{{ ec2_instance_id }}"
+        region: "{{ aws_region }}"
+      register: _instance_info
+
+    - name: Resolve root EBS volume ID
+      ansible.builtin.set_fact:
+        ec2_volume_id: >-
+          {{
+            (
+              _instance_info.instances[0].block_device_mappings
+              | selectattr('device_name', 'equalto', ec2_root_device_name)
+              | map(attribute='ebs.volume_id')
+              | list
+            )[0]
+          }}
+
+    - name: Gather current EBS volume info
+      amazon.aws.ec2_vol_info:
+        filters:
+          volume-id: "{{ ec2_volume_id }}"
+        region: "{{ aws_region }}"
+      register: _volume_info
+
+    - name: Calculate new EBS volume size
+      ansible.builtin.set_fact:
+        volume_size_before_gb: "{{ _volume_info.volumes[0].size }}"
+        volume_size_after_gb: "{{ _volume_info.volumes[0].size + (disk_expand_gb | int) }}"
+
+    - name: Expand EBS volume
+      amazon.aws.ec2_vol:
+        id: "{{ ec2_volume_id }}"
+        instance: "{{ ec2_instance_id }}"
+        volume_size: "{{ volume_size_after_gb }}"
+        region: "{{ aws_region }}"
+        modify_volume: true
+      register: _volume_modify
+
+    - name: Wait for EBS volume modification to complete
+      amazon.aws.ec2_vol_info:
+        filters:
+          volume-id: "{{ ec2_volume_id }}"
+        region: "{{ aws_region }}"
+      register: _volume_wait
+      until: >-
+        (_volume_wait.volumes[0].size | int) >= (volume_size_after_gb | int)
+        and (
+          (_volume_wait.volumes[0].modification_state | default({})).state
+          | default('completed')
+        ) in ['completed', 'optimizing']
+      retries: 30
+      delay: 10
+
+    - name: Show AWS volume expansion result
+      ansible.builtin.debug:
+        msg: >-
+          Expanded {{ ec2_volume_id }} on {{ ec2_instance_id }}
+          from {{ volume_size_before_gb }} GiB to {{ volume_size_after_gb }} GiB.
+
+- name: Grow partition and filesystem on Linux host
+  hosts: "{{ _host | default('all') }}"
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Apply defaults
+      ansible.builtin.set_fact:
+        disk_mount: "{{ disk_mount | default('/') }}"
+        disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
+        disk_tier: "{{ disk_tier | default('critical') }}"
+        volume_size_before_gb: "{{ hostvars['localhost'].volume_size_before_gb | default('unknown') }}"
+        volume_size_after_gb: "{{ hostvars['localhost'].volume_size_after_gb | default('unknown') }}"
+        disk_expand_gb: "{{ hostvars['localhost'].disk_expand_gb | default(disk_expand_gb | default(5)) | int }}"
+
+    - name: Discover root block device for mount
+      ansible.builtin.command:
+        cmd: findmnt -n -o SOURCE {{ disk_mount }}
+      register: _root_source
+      changed_when: false
+
+    - name: Resolve parent disk for partition
+      ansible.builtin.command:
+        cmd: lsblk -no PKNAME {{ _root_source.stdout | trim }}
+      register: _root_disk_cmd
+      changed_when: false
+
+    - name: Set growpart targets
+      ansible.builtin.set_fact:
+        _root_partition: "{{ _root_source.stdout | trim }}"
+        _root_disk: "/dev/{{ _root_disk_cmd.stdout | trim }}"
+        _root_partition_num: >-
+          {{
+            (
+              _root_source.stdout | trim | regex_search('p([0-9]+)$', '\1') | first
+            )
+            | default(
+              _root_source.stdout | trim | regex_search('([0-9]+)$', '\1') | first
+            )
+          }}
+
+    - name: Grow partition to use expanded EBS volume
+      ansible.builtin.command:
+        argv:
+          - growpart
+          - "{{ _root_disk }}"
+          - "{{ _root_partition_num }}"
+      register: _growpart
+      changed_when: "'CHANGED' in _growpart.stdout"
+      failed_when: _growpart.rc != 0 and "'NOCHANGE' not in _growpart.stdout"
+
+    - name: Grow XFS filesystem on mount
+      ansible.builtin.command:
+        cmd: xfs_growfs {{ disk_mount }}
+      register: _xfs_grow
+      changed_when: true
+
+    - name: Show filesystem size after grow
+      ansible.builtin.command:
+        cmd: df -hT {{ disk_mount }}
+      register: _df_after
+      changed_when: false
+
+    - name: Display expanded filesystem
+      ansible.builtin.debug:
+        msg: "{{ _df_after.stdout_lines }}"
+
+    - name: Publish expansion results for downstream steps
+      ansible.builtin.set_stats:
+        data:
+          disk_mount: "{{ disk_mount }}"
+          disk_use_percent: "{{ disk_use_percent }}"
+          disk_tier: "{{ disk_tier }}"
+          notify_host: "{{ ansible_play_hosts | join(',') }}"
+          remediation_action: Expand EBS Volume
+          disk_expand_gb: "{{ disk_expand_gb }}"
+          volume_size_before_gb: "{{ volume_size_before_gb }}"
+          volume_size_after_gb: "{{ volume_size_after_gb }}"
+          dnf_cache_removed: "0"
+          log_archives_removed: "0"
+        per_host: false
+        aggregate: false
+      run_once: true

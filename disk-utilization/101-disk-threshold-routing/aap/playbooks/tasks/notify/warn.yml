@@ -1,0 +1,29 @@
+---
+- name: Build Mattermost attachment (warning)
+  ansible.builtin.set_fact:
+    mattermost_attachments:
+      - text: "Disk utilization workflow update for {{ notify_host }}"
+        color: '#f39c12'
+        title: Disk Utilization Warning
+        fields:
+          - title: Target Host
+            value: "{{ notify_host }}"
+            short: true
+          - title: Disk Mount
+            value: "{{ disk_mount }}"
+            short: true
+          - title: Disk Use Percent
+            value: "{{ disk_use_percent }}"
+            short: true
+          - title: Disk Tier
+            value: "{{ disk_tier }}"
+            short: true
+          - title: Remediation Action
+            value: "{{ remediation_action }}"
+            short: true
+          - title: DNF Cache Removed
+            value: "{{ dnf_cache_removed }}"
+            short: true
+          - title: Log Archives Removed
+            value: "{{ log_archives_removed }}"
+            short: true

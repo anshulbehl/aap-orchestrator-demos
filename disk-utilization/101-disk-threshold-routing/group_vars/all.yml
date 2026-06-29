@@ -2,3 +2,6 @@
 disk_mount: /
 disk_warn_threshold: 80
 disk_critical_threshold: 95
+aws_region: us-east-1
+ec2_root_device_name: /dev/sda1
+disk_expand_gb: 5
