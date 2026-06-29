@@ -163,25 +163,12 @@
           }}
 
     - name: Publish cleanup results for downstream steps
-      ansible.builtin.set_stats:
-        data:
-          disk_mount: "{{ disk_mount }}"
-          disk_use_percent: "{{ disk_use_percent_after }}"
-          disk_use_percent_before: "{{ disk_use_percent_before }}"
-          disk_use_percent_after: "{{ disk_use_percent_after }}"
-          disk_tier: "{{ disk_tier }}"
-          notify_host: "{{ ansible_play_hosts | join(',') }}"
-          remediation_action: Cleanup Logs
-          log_retention_days: "{{ log_retention_days }}"
-          total_reclaimed_mb: "{{ total_reclaimed_mb }}"
-          mount_usage_change_mb: "{{ mount_usage_change_mb }}"
-          dnf_cache_removed: "{{ dnf_cache_files.files | default([]) | length }}"
-          dnf_cache_freed_mb: "{{ dnf_cache_freed_mb }}"
-          log_archives_removed: "{{ old_logs_to_remove | length }}"
-          logs_freed_mb: "{{ logs_freed_mb }}"
-          log_archives_gz_removed: "{{ old_log_archives_gz.files | default([]) | length }}"
-          log_archives_plain_removed: "{{ old_log_archives_plain.files | default([]) | length }}"
-          dry_run: "{{ ansible_check_mode }}"
-        per_host: false
-        aggregate: false
-      run_once: true
+      ansible.builtin.set_fact:
+        remediation_action: Cleanup Logs
+        disk_use_percent: "{{ disk_use_percent_after }}"
+        dnf_cache_removed: "{{ dnf_cache_files.files | default([]) | length }}"
+        log_archives_removed: "{{ old_logs_to_remove | length }}"
+        dry_run: "{{ ansible_check_mode }}"
+
+    - name: Publish notify artifacts for downstream steps
+      ansible.builtin.include_tasks: tasks/publish_notify_artifacts.yml

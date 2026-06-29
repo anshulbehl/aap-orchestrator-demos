@@ -1,5 +1,5 @@
 ---
-- name: Continue — disk usage healthy
+- name: Fallback — unknown disk tier
   hosts: "{{ _host | default('all') }}"
   become: true
   gather_facts: false
@@ -8,12 +8,14 @@
       ansible.builtin.set_fact:
         disk_mount: "{{ disk_mount | default('/') }}"
         disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
-        disk_tier: "{{ disk_tier | default('ok') }}"
-        remediation_action: No Action Taken
+        disk_tier: "{{ disk_tier | default('unknown') }}"
+        remediation_action: Unknown Tier — Manual Review
 
-    - name: Disk usage is healthy
+    - name: Unexpected disk tier — no automated remediation
       ansible.builtin.debug:
-        msg: "{{ disk_mount }} at {{ disk_use_percent }}% — no action needed."
+        msg: >-
+          Could not route remediation for {{ disk_mount }} at {{ disk_use_percent }}% full.
+          disk_tier={{ disk_tier | quote }} is not ok, warn, or critical — manual review required.
 
     - name: Publish notify artifacts for downstream steps
       ansible.builtin.include_tasks: tasks/publish_notify_artifacts.yml

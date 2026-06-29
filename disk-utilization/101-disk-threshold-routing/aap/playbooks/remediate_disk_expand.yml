@@ -189,20 +189,10 @@
       ansible.builtin.debug:
         msg: "{{ _df_after.stdout_lines }}"
 
-    - name: Publish expansion results for downstream steps
-      ansible.builtin.set_stats:
-        data:
-          disk_mount: "{{ disk_mount }}"
-          disk_use_percent: "{{ disk_use_percent }}"
-          disk_tier: "{{ disk_tier }}"
-          notify_host: "{{ ansible_play_hosts | join(',') }}"
-          remediation_action: Expand EBS Volume
-          disk_expand_gb: "{{ disk_expand_gb }}"
-          volume_size_before_gb: "{{ volume_size_before_gb }}"
-          volume_size_after_gb: "{{ volume_size_after_gb }}"
-          dnf_cache_removed: "0"
-          log_archives_removed: "0"
-        per_host: false
-        aggregate: false
-      run_once: true
-      when: not ansible_check_mode
+    - name: Set notify artifact values for expansion branch
+      ansible.builtin.set_fact:
+        remediation_action: Expand EBS Volume
+        dry_run: "{{ ansible_check_mode }}"
+
+    - name: Publish notify artifacts for downstream steps
+      ansible.builtin.include_tasks: tasks/publish_notify_artifacts.yml

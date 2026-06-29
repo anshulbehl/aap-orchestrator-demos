@@ -1,0 +1,19 @@
+{
+  "notify_host": "${remediate_continue.artifacts.notify_host || remediate_cleanup.artifacts.notify_host || remediate_expand.artifacts.notify_host || remediate_fallback.artifacts.notify_host}",
+  "disk_mount": "${remediate_continue.artifacts.disk_mount || remediate_cleanup.artifacts.disk_mount || remediate_expand.artifacts.disk_mount || remediate_fallback.artifacts.disk_mount}",
+  "disk_use_percent": "${remediate_continue.artifacts.disk_use_percent || remediate_cleanup.artifacts.disk_use_percent || remediate_expand.artifacts.disk_use_percent || remediate_fallback.artifacts.disk_use_percent}",
+  "disk_tier": "${remediate_continue.artifacts.disk_tier || remediate_cleanup.artifacts.disk_tier || remediate_expand.artifacts.disk_tier || remediate_fallback.artifacts.disk_tier}",
+  "remediation_action": "${remediate_continue.artifacts.remediation_action || remediate_cleanup.artifacts.remediation_action || remediate_expand.artifacts.remediation_action || remediate_fallback.artifacts.remediation_action}",
+  "disk_use_percent_before": "${remediate_continue.artifacts.disk_use_percent_before || remediate_cleanup.artifacts.disk_use_percent_before || remediate_expand.artifacts.disk_use_percent_before || remediate_fallback.artifacts.disk_use_percent_before}",
+  "disk_use_percent_after": "${remediate_continue.artifacts.disk_use_percent_after || remediate_cleanup.artifacts.disk_use_percent_after || remediate_expand.artifacts.disk_use_percent_after || remediate_fallback.artifacts.disk_use_percent_after}",
+  "total_reclaimed_mb": "${remediate_continue.artifacts.total_reclaimed_mb || remediate_cleanup.artifacts.total_reclaimed_mb || remediate_expand.artifacts.total_reclaimed_mb || remediate_fallback.artifacts.total_reclaimed_mb}",
+  "dnf_cache_removed": "${remediate_continue.artifacts.dnf_cache_removed || remediate_cleanup.artifacts.dnf_cache_removed || remediate_expand.artifacts.dnf_cache_removed || remediate_fallback.artifacts.dnf_cache_removed}",
+  "dnf_cache_freed_mb": "${remediate_continue.artifacts.dnf_cache_freed_mb || remediate_cleanup.artifacts.dnf_cache_freed_mb || remediate_expand.artifacts.dnf_cache_freed_mb || remediate_fallback.artifacts.dnf_cache_freed_mb}",
+  "log_archives_removed": "${remediate_continue.artifacts.log_archives_removed || remediate_cleanup.artifacts.log_archives_removed || remediate_expand.artifacts.log_archives_removed || remediate_fallback.artifacts.log_archives_removed}",
+  "logs_freed_mb": "${remediate_continue.artifacts.logs_freed_mb || remediate_cleanup.artifacts.logs_freed_mb || remediate_expand.artifacts.logs_freed_mb || remediate_fallback.artifacts.logs_freed_mb}",
+  "log_retention_days": "${remediate_continue.artifacts.log_retention_days || remediate_cleanup.artifacts.log_retention_days || remediate_expand.artifacts.log_retention_days || remediate_fallback.artifacts.log_retention_days}",
+  "dry_run": "${remediate_continue.artifacts.dry_run || remediate_cleanup.artifacts.dry_run || remediate_expand.artifacts.dry_run || remediate_fallback.artifacts.dry_run}",
+  "disk_expand_gb": "${remediate_continue.artifacts.disk_expand_gb || remediate_cleanup.artifacts.disk_expand_gb || remediate_expand.artifacts.disk_expand_gb || remediate_fallback.artifacts.disk_expand_gb}",
+  "volume_size_before_gb": "${remediate_continue.artifacts.volume_size_before_gb || remediate_cleanup.artifacts.volume_size_before_gb || remediate_expand.artifacts.volume_size_before_gb || remediate_fallback.artifacts.volume_size_before_gb}",
+  "volume_size_after_gb": "${remediate_continue.artifacts.volume_size_after_gb || remediate_cleanup.artifacts.volume_size_after_gb || remediate_expand.artifacts.volume_size_after_gb || remediate_fallback.artifacts.volume_size_after_gb}"
+}

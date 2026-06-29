@@ -7,11 +7,11 @@ Check disk usage
        |
   Switch on %
        |
--------------------------
-<80%     80-95%     >95%
-  |         |          |
-Continue   Cleanup   Expand EBS
- (ok)      logs      + grow FS
+-----------------------------------------
+<80%     80-95%     >95%     (default)
+  |         |          |          |
+Continue   Cleanup   Expand    Fallback
+ (ok)      logs      EBS       manual review
 ```
 
 ## What you need
@@ -22,7 +22,7 @@ Continue   Cleanup   Expand EBS
 
 ## Setup
 
-**1. Register six job templates** from `aap/playbooks/`:
+**1. Register seven job templates** from `aap/playbooks/`:
 
 | Job template | Playbook |
 |---|---|
@@ -30,6 +30,7 @@ Continue   Cleanup   Expand EBS
 | Remediate Disk Continue | `remediate_disk_continue.yml` |
 | Remediate Disk Cleanup | `remediate_disk_cleanup.yml` |
 | Remediate Disk Expand | `remediate_disk_expand.yml` |
+| Remediate Disk Fallback | `remediate_disk_fallback.yml` |
 | Notify Team | `notify_chatroom.yml` |
 
 Use `inventory/hosts.yml` for the target host. `ec2_instance_id` in inventory is optional — the expand playbook auto-discovers the instance via EC2 metadata or AWS API IP lookup.
@@ -45,10 +46,62 @@ Use `inventory/hosts.yml` for the target host. `ec2_instance_id` in inventory is
 | `ok` | < 80% | Continue — publish notify artifacts, no remediation |
 | `warn` | 80–95% | Clean package cache and old logs |
 | `critical` | > 95% | Expand EBS volume by 5 GiB, then grow partition and XFS |
+| *(default)* | any other `disk_tier` | Fallback — no automated remediation; notify as unsupported |
 
 The check playbook publishes `disk_tier` via `set_stats`. The switch node reads it — no nested success/failure nodes.
 
-Each remediation branch publishes a full notify artifact bundle via `set_stats`. Map notify extra vars from the remediation node on that branch (`remediate_continue`, `remediate_cleanup`, or `remediate_expand`).
+Each remediation branch publishes a **full notify artifact bundle** via `set_stats` (see `aap/playbooks/tasks/publish_notify_artifacts.yml`). Every branch emits the same keys; branch-specific fields get real values and everything else is `unknown` / `0` / `false`.
+
+## Converging notify node — extra_vars pattern
+
+Four remediate branches converge into one `notify_team` node. Only **one** remediate job runs per workflow execution, so notify must not mix artifact references from branches that were skipped.
+
+**Do not** map notify fields from `check_disk` plus scattered remediate nodes (e.g. cleanup stats from `remediate_cleanup` and expand stats from `remediate_expand` in the same block). That breaks on branches where those nodes never ran.
+
+**Do** map every notify field from the **upstream remediate node on the executed path** only.
+
+### Option A — AO UI (recommended, validated)
+
+After import, open the **Notify Team** node. For every `extra_vars` key, use the **same activity UUID** — the remediate step that ran on that branch:
+
+```json
+{
+  "notify_host": "${activity_<REMEDIATE_UUID>.artifacts.notify_host}",
+  "disk_mount": "${activity_<REMEDIATE_UUID>.artifacts.disk_mount}",
+  "disk_use_percent": "${activity_<REMEDIATE_UUID>.artifacts.disk_use_percent}",
+  "disk_tier": "${activity_<REMEDIATE_UUID>.artifacts.disk_tier}",
+  "remediation_action": "${activity_<REMEDIATE_UUID>.artifacts.remediation_action}",
+  "disk_use_percent_before": "${activity_<REMEDIATE_UUID>.artifacts.disk_use_percent_before}",
+  "disk_use_percent_after": "${activity_<REMEDIATE_UUID>.artifacts.disk_use_percent_after}",
+  "total_reclaimed_mb": "${activity_<REMEDIATE_UUID>.artifacts.total_reclaimed_mb}",
+  "dnf_cache_removed": "${activity_<REMEDIATE_UUID>.artifacts.dnf_cache_removed}",
+  "dnf_cache_freed_mb": "${activity_<REMEDIATE_UUID>.artifacts.dnf_cache_freed_mb}",
+  "log_archives_removed": "${activity_<REMEDIATE_UUID>.artifacts.log_archives_removed}",
+  "logs_freed_mb": "${activity_<REMEDIATE_UUID>.artifacts.logs_freed_mb}",
+  "log_retention_days": "${activity_<REMEDIATE_UUID>.artifacts.log_retention_days}",
+  "dry_run": "${activity_<REMEDIATE_UUID>.artifacts.dry_run}",
+  "disk_expand_gb": "${activity_<REMEDIATE_UUID>.artifacts.disk_expand_gb}",
+  "volume_size_before_gb": "${activity_<REMEDIATE_UUID>.artifacts.volume_size_before_gb}",
+  "volume_size_after_gb": "${activity_<REMEDIATE_UUID>.artifacts.volume_size_after_gb}"
+}
+```
+
+Replace `<REMEDIATE_UUID>` with the activity ID of the remediate node upstream of notify on that run (continue, cleanup, expand, or fallback). Copy-paste ready template: [`ao/notify_extra_vars.json`](ao/notify_extra_vars.json) — substitute the UUID for each logical node name.
+
+**Important:** Re-run the remediate job after syncing the project so all artifact keys exist before testing notify. AO errors like `Key 'disk_use_percent_after' not found in namespace path` mean the upstream job ran an older playbook revision.
+
+### Option B — Imported JSON coalesce
+
+[`ao/disk-demo-101-manual.json`](ao/disk-demo-101-manual.json) uses `||` coalesce across all four remediate node IDs so a single notify node can resolve whichever branch executed. If your AO build rejects coalesce on skipped namespaces, use Option A instead.
+
+### Canonical artifact keys
+
+| Key | ok / fallback | warn | critical |
+|-----|---------------|------|----------|
+| `notify_host`, `disk_mount`, `disk_tier`, `remediation_action` | yes | yes | yes |
+| `disk_use_percent` | from check | **after** cleanup | from check |
+| cleanup stats (`total_reclaimed_mb`, `dnf_*`, `logs_*`, `dry_run`, …) | `unknown` / `0` | real values | `unknown` / `0` |
+| expand stats (`disk_expand_gb`, `volume_size_*`) | `unknown` | `unknown` | real values |
 
 ## Critical path — EBS expand
 
