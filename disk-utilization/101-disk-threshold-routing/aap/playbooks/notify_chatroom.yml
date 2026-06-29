@@ -9,7 +9,7 @@
         notify_host: "{{ notify_host | default('unknown') | string }}"
         disk_mount: "{{ disk_mount | default('unknown') | string }}"
         disk_use_percent: "{{ disk_use_percent | default('unknown') | string }}"
-        disk_tier: "{{ disk_tier | default('unknown') | string }}"
+        disk_tier: "{{ disk_tier | default('unknown') | string | trim | lower }}"
         remediation_action: "{{ remediation_action | default('unknown') | string }}"
         dnf_cache_removed: "{{ dnf_cache_removed | default('unknown') | string }}"
         log_archives_removed: "{{ log_archives_removed | default('unknown') | string }}"
@@ -23,14 +23,18 @@
         volume_size_before_gb: "{{ volume_size_before_gb | default('unknown') | string }}"
         volume_size_after_gb: "{{ volume_size_after_gb | default('unknown') | string }}"
 
-    - name: Include tier-specific notification template
-      ansible.builtin.include_tasks: "{{ item }}"
-      with_first_found:
-        - files:
-            - "{{ playbook_dir }}/tasks/notify/{{ disk_tier }}.yml"
-          skip: true
-        - files:
-            - "{{ playbook_dir }}/tasks/notify/unsupported.yml"
+    - name: Include notification template for disk tier
+      block:
+        - name: Include tier-specific notification template
+          ansible.builtin.include_tasks: "tasks/notify/{{ disk_tier }}.yml"
+      rescue:
+        - name: Include unsupported notification template
+          ansible.builtin.include_tasks: tasks/notify/unsupported.yml
+        - name: Show notify template resolution
+          ansible.builtin.debug:
+            msg: >-
+              Could not load tasks/notify/{{ disk_tier }}.yml
+              (disk_tier={{ disk_tier | quote }}) — using unsupported.
 
     - name: Send notification message via Mattermost
       community.general.mattermost:
