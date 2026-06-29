@@ -201,6 +201,7 @@
           "log_archives_removed": "${remediate_cleanup.artifacts.log_archives_removed}",
           "logs_freed_mb": "${remediate_cleanup.artifacts.logs_freed_mb}",
           "log_retention_days": "${remediate_cleanup.artifacts.log_retention_days}",
+          "dry_run": "${remediate_cleanup.artifacts.dry_run}",
           "disk_expand_gb": "${remediate_expand.artifacts.disk_expand_gb}",
           "volume_size_before_gb": "${remediate_expand.artifacts.volume_size_before_gb}",
           "volume_size_after_gb": "${remediate_expand.artifacts.volume_size_after_gb}"

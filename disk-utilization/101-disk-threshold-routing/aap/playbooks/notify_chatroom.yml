@@ -19,6 +19,7 @@
         dnf_cache_freed_mb: "{{ dnf_cache_freed_mb | default('unknown') | string }}"
         logs_freed_mb: "{{ logs_freed_mb | default('unknown') | string }}"
         log_retention_days: "{{ log_retention_days | default('90') | string }}"
+        dry_run: "{{ dry_run | default(false) | bool }}"
         disk_expand_gb: "{{ disk_expand_gb | default('unknown') | string }}"
         volume_size_before_gb: "{{ volume_size_before_gb | default('unknown') | string }}"
         volume_size_after_gb: "{{ volume_size_after_gb | default('unknown') | string }}"

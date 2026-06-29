@@ -181,6 +181,7 @@
           logs_freed_mb: "{{ logs_freed_mb }}"
           log_archives_gz_removed: "{{ old_log_archives_gz.files | default([]) | length }}"
           log_archives_plain_removed: "{{ old_log_archives_plain.files | default([]) | length }}"
+          dry_run: "{{ ansible_check_mode }}"
         per_host: false
         aggregate: false
       run_once: true
