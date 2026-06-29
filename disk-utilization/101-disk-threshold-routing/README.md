@@ -32,7 +32,7 @@ Continue   Cleanup   Expand EBS
 | Remediate Disk Expand | `remediate_disk_expand.yml` |
 | Notify Team | `notify_chatroom.yml` |
 
-Use `inventory/hosts.yml` for the target host. Set `ec2_instance_id` per host for the AWS expand play.
+Use `inventory/hosts.yml` for the target host. `ec2_instance_id` in inventory is optional — the expand playbook auto-discovers the instance via EC2 metadata or AWS API IP lookup.
 
 **2. Import the workflow** — `ao/disk-demo-101-manual.json` into Orchestrator. Open each AAP job node and set `job_template_id` to the matching job template in your Controller (IDs are environment-specific; `1` is a placeholder).
 

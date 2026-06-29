@@ -1,27 +1,42 @@
 ---
-- name: Expand EBS volume in AWS
-  hosts: localhost
-  connection: local
-  gather_facts: false
-  vars:
-    target_host: "{{ _host | default(groups['linux'][0] | default('disk-demo-vm')) }}"
+- name: Discover EC2 instance for target host
+  hosts: "{{ _host | default('all') }}"
+  gather_facts: true
   tasks:
     - name: Apply defaults
       ansible.builtin.set_fact:
         disk_mount: "{{ disk_mount | default('/') }}"
         disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
         disk_tier: "{{ disk_tier | default('critical') }}"
-        aws_region: "{{ aws_region | default(hostvars[target_host].aws_region | default('us-east-1')) }}"
-        ec2_instance_id: "{{ ec2_instance_id | default(hostvars[target_host].ec2_instance_id | default('')) }}"
-        ec2_root_device_name: "{{ ec2_root_device_name | default('/dev/sda1') }}"
+        aws_region: "{{ aws_region | default('us-east-1') }}"
         disk_expand_gb: "{{ disk_expand_gb | default(5) | int }}"
 
-    - name: Fail when EC2 instance ID is missing
-      ansible.builtin.fail:
-        msg: >-
-          ec2_instance_id is required. Set it in inventory for {{ target_host }}
-          or pass it as an extra var.
-      when: ec2_instance_id | length == 0
+    - name: Remember target hosts for AWS play
+      ansible.builtin.set_fact:
+        expand_target_hosts: "{{ ansible_play_hosts }}"
+      run_once: true
+      delegate_to: localhost
+      delegate_facts: true
+
+    - name: Discover EC2 instance identity
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/discover_ec2_instance.yml"
+
+- name: Expand EBS volume in AWS
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    target_host: "{{ expand_target_hosts[0] }}"
+  tasks:
+    - name: Apply defaults from discovered target
+      ansible.builtin.set_fact:
+        disk_mount: "{{ disk_mount | default('/') }}"
+        disk_use_percent: "{{ disk_use_percent | default('unknown') }}"
+        disk_tier: "{{ disk_tier | default('critical') }}"
+        disk_expand_gb: "{{ disk_expand_gb | default(5) | int }}"
+        ec2_instance_id: "{{ hostvars[target_host].discovered_ec2_instance_id }}"
+        aws_region: "{{ hostvars[target_host].discovered_aws_region }}"
+        ec2_root_device_name: "{{ ec2_root_device_name | default('/dev/sda1') }}"
 
     - name: Gather EC2 instance info
       amazon.aws.ec2_instance_info:
@@ -82,7 +97,8 @@
       ansible.builtin.debug:
         msg: >-
           Expanded {{ ec2_volume_id }} on {{ ec2_instance_id }}
-          from {{ volume_size_before_gb }} GiB to {{ volume_size_after_gb }} GiB.
+          ({{ target_host }}) from {{ volume_size_before_gb }} GiB
+          to {{ volume_size_after_gb }} GiB.
 
 - name: Grow partition and filesystem on Linux host
   hosts: "{{ _host | default('all') }}"

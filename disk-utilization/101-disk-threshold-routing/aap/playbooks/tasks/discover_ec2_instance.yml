@@ -1,0 +1,132 @@
+---
+- name: Use inventory EC2 instance ID when provided
+  ansible.builtin.set_fact:
+    discovered_ec2_instance_id: "{{ ec2_instance_id }}"
+    discovered_aws_region: "{{ aws_region | default('us-east-1') }}"
+  when: ec2_instance_id | default('') | length > 0
+
+- name: Fetch IMDSv2 token
+  ansible.builtin.uri:
+    url: http://169.254.169.254/latest/api/token
+    method: PUT
+    headers:
+      X-aws-ec2-metadata-token-ttl-seconds: "21600"
+    return_content: true
+    timeout: 2
+  register: _imds_token
+  failed_when: false
+  when: discovered_ec2_instance_id | default('') | length == 0
+
+- name: Get EC2 instance ID from instance metadata
+  ansible.builtin.uri:
+    url: http://169.254.169.254/latest/meta-data/instance-id
+    headers:
+      X-aws-ec2-metadata-token: "{{ _imds_token.content }}"
+    return_content: true
+    timeout: 2
+  register: _imds_instance_id
+  failed_when: false
+  when:
+    - discovered_ec2_instance_id | default('') | length == 0
+    - _imds_token.status | default(-1) == 200
+
+- name: Get AWS region from instance metadata
+  ansible.builtin.uri:
+    url: http://169.254.169.254/latest/meta-data/placement/region
+    headers:
+      X-aws-ec2-metadata-token: "{{ _imds_token.content }}"
+    return_content: true
+    timeout: 2
+  register: _imds_region
+  failed_when: false
+  when:
+    - discovered_ec2_instance_id | default('') | length == 0
+    - _imds_token.status | default(-1) == 200
+
+- name: Set EC2 identity from instance metadata
+  ansible.builtin.set_fact:
+    discovered_ec2_instance_id: "{{ _imds_instance_id.content | trim }}"
+    discovered_aws_region: "{{ _imds_region.content | trim }}"
+  when:
+    - discovered_ec2_instance_id | default('') | length == 0
+    - _imds_instance_id.status | default(-1) == 200
+    - _imds_instance_id.content | trim | length > 0
+
+- name: Resolve inventory connection address for EC2 lookup
+  ansible.builtin.set_fact:
+    _ec2_lookup_address: >-
+      {{
+        hostvars[inventory_hostname].ansible_host
+        | default(ansible_facts['default_ipv4']['address'] | default(''))
+      }}
+  when: discovered_ec2_instance_id | default('') | length == 0
+
+- name: Resolve DNS name to IP for EC2 lookup
+  ansible.builtin.set_fact:
+    _ec2_lookup_ip: "{{ lookup('dig', _ec2_lookup_address, wantlist=True) | first | default(_ec2_lookup_address, true) }}"
+  when:
+    - discovered_ec2_instance_id | default('') | length == 0
+    - _ec2_lookup_address is match('.*[a-zA-Z].*')
+
+- name: Use literal IP for EC2 lookup
+  ansible.builtin.set_fact:
+    _ec2_lookup_ip: "{{ _ec2_lookup_address }}"
+  when:
+    - discovered_ec2_instance_id | default('') | length == 0
+    - _ec2_lookup_ip is not defined
+    - _ec2_lookup_address | length > 0
+
+- name: Lookup EC2 instance by public IP
+  amazon.aws.ec2_instance_info:
+    region: "{{ aws_region | default('us-east-1') }}"
+    filters:
+      ip-address: "{{ _ec2_lookup_ip }}"
+      instance-state-name: running
+  register: _ec2_by_public_ip
+  delegate_to: localhost
+  become: false
+  when:
+    - discovered_ec2_instance_id | default('') | length == 0
+    - _ec2_lookup_ip | default('') | length > 0
+
+- name: Set EC2 identity from public IP lookup
+  ansible.builtin.set_fact:
+    discovered_ec2_instance_id: "{{ _ec2_by_public_ip.instances[0].instance_id }}"
+    discovered_aws_region: "{{ _ec2_by_public_ip.instances[0].placement.region }}"
+  when:
+    - _ec2_by_public_ip.instances | default([]) | length > 0
+
+- name: Lookup EC2 instance by private IP
+  amazon.aws.ec2_instance_info:
+    region: "{{ aws_region | default('us-east-1') }}"
+    filters:
+      private-ip-address: "{{ ansible_facts['default_ipv4']['address'] }}"
+      instance-state-name: running
+  register: _ec2_by_private_ip
+  delegate_to: localhost
+  become: false
+  when:
+    - discovered_ec2_instance_id | default('') | length == 0
+    - ansible_facts['default_ipv4']['address'] | default('') | length > 0
+
+- name: Set EC2 identity from private IP lookup
+  ansible.builtin.set_fact:
+    discovered_ec2_instance_id: "{{ _ec2_by_private_ip.instances[0].instance_id }}"
+    discovered_aws_region: "{{ _ec2_by_private_ip.instances[0].placement.region }}"
+  when:
+    - _ec2_by_private_ip.instances | default([]) | length > 0
+
+- name: Fail when EC2 instance could not be discovered
+  ansible.builtin.fail:
+    msg: >-
+      Could not discover EC2 instance for {{ inventory_hostname }}.
+      Tried IMDS, public address {{ _ec2_lookup_address | default('n/a') }},
+      and private IP {{ ansible_facts['default_ipv4']['address'] | default('n/a') }}.
+      Set ec2_instance_id in inventory to override.
+  when: discovered_ec2_instance_id | default('') | length == 0
+
+- name: Show discovered EC2 identity
+  ansible.builtin.debug:
+    msg: >-
+      {{ inventory_hostname }} maps to {{ discovered_ec2_instance_id }}
+      in {{ discovered_aws_region }}.
