@@ -35,7 +35,7 @@ Continue   Cleanup   Expand    Fallback
 
 Use `inventory/hosts.yml` for the target host. `ec2_instance_id` in inventory is optional — the expand playbook auto-discovers the instance via EC2 metadata or AWS API IP lookup.
 
-**2. Import the workflow** — `ao/disk-demo-101-manual.json` into Orchestrator. Open each AAP job node and set `job_template_id` to the matching job template in your Controller (IDs are environment-specific; `1` is a placeholder).
+**2. Import the workflow** — `ao/disk-demo-101.json` into Orchestrator. This export matches the nostromo layout (check → switch → continue/cleanup → converge → notify). Re-import replaces the workflow; activity UUIDs in the file must match your environment or AO will reassign them on import.
 
 **3. Launch** from the AO UI. Default input is `disk_mount=/`.
 
@@ -54,7 +54,7 @@ Each remediation branch publishes a **full notify artifact bundle** via `set_sta
 
 ## Converging notify node — extra_vars pattern
 
-Four remediate branches converge into one `notify_team` node. Only **one** remediate job runs per workflow execution, so notify must not mix artifact references from branches that were skipped.
+Remediate branches converge into one notify node (continue + cleanup in the current export). Only **one** remediate job runs per workflow execution, so notify must not reference artifacts from the branch that was skipped.
 
 **Do not** map notify fields from `check_disk` plus scattered remediate nodes (e.g. cleanup stats from `remediate_cleanup` and expand stats from `remediate_expand` in the same block). That breaks on branches where those nodes never ran.
 
@@ -86,13 +86,13 @@ After import, open the **Notify Team** node. For every `extra_vars` key, use the
 }
 ```
 
-Replace `<REMEDIATE_UUID>` with the activity ID of the remediate node upstream of notify on that run (continue, cleanup, expand, or fallback). Copy-paste ready template: [`ao/notify_extra_vars.json`](ao/notify_extra_vars.json) — substitute the UUID for each logical node name.
+Replace `<REMEDIATE_UUID>` with the activity ID of the remediate node upstream of notify on that run (continue or cleanup in the two-branch demo).
 
 **Important:** Re-run the remediate job after syncing the project so all artifact keys exist before testing notify. AO errors like `Key 'disk_use_percent_after' not found in namespace path` mean the upstream job ran an older playbook revision.
 
-### Option B — Imported JSON coalesce
+### Option B — Coalesce in exported JSON
 
-[`ao/disk-demo-101-manual.json`](ao/disk-demo-101-manual.json) uses `||` coalesce across all four remediate node IDs so a single notify node can resolve whichever branch executed. If your AO build rejects coalesce on skipped namespaces, use Option A instead.
+[`ao/disk-demo-101.json`](ao/disk-demo-101.json) uses `||` coalesce between **Continue** (`activity_ee976dab...`) and **Clean Disk** (`activity_5f6d0c2e...`) so the single notify node resolves whichever branch executed. If your AO build rejects coalesce on skipped namespaces, use Option A instead.
 
 ### Canonical artifact keys
 
