@@ -189,6 +189,18 @@
       ansible.builtin.debug:
         msg: "{{ _df_after.stdout_lines }}"
 
+    - name: Set disk use percent from live df when not supplied
+      ansible.builtin.set_fact:
+        disk_use_percent: >-
+          {%- set supplied = disk_use_percent | default('unknown') | string -%}
+          {%- if supplied not in ['unknown', ''] -%}
+          {{ supplied }}
+          {%- elif (_df_after.stdout_lines | length) > 1 -%}
+          {{ _df_after.stdout_lines[1] | regex_search('([0-9]+)%', '\1') | first | default('unknown') }}
+          {%- else -%}
+          unknown
+          {%- endif -%}
+
     - name: Set notify artifact values for expansion branch
       ansible.builtin.set_fact:
         remediation_action: Expand EBS Volume
