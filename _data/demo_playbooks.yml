@@ -1,0 +1,80 @@
+disk-utilization-101:
+  status: active
+  items:
+    - name: check_disk.yml
+      path: disk-utilization/101-disk-threshold-routing/aap/playbooks/check_disk.yml
+      description: Reads filesystem usage on the target mount and publishes disk_use_percent and disk_tier artifacts for the switch.
+      runs_on: RHEL EC2 node
+    - name: remediate_disk_continue.yml
+      path: disk-utilization/101-disk-threshold-routing/aap/playbooks/remediate_disk_continue.yml
+      description: Healthy path when disk is below the warning threshold — logs status and publishes notify artifacts with no changes to the host.
+      runs_on: RHEL EC2 node
+    - name: remediate_disk_cleanup.yml
+      path: disk-utilization/101-disk-threshold-routing/aap/playbooks/remediate_disk_cleanup.yml
+      description: Reclaims dnf package cache and old log archives, then publishes before/after usage stats for the warning notify tier.
+      runs_on: RHEL EC2 node
+    - name: remediate_disk_expand.yml
+      path: disk-utilization/101-disk-threshold-routing/aap/playbooks/remediate_disk_expand.yml
+      description: Increases the root EBS volume in AWS, then runs growpart and xfs_growfs on the host for the critical expand path.
+      runs_on: AWS (localhost) + RHEL EC2 node
+    - name: remediate_disk_fallback.yml
+      path: disk-utilization/101-disk-threshold-routing/aap/playbooks/remediate_disk_fallback.yml
+      description: Handles unexpected switch tiers (e.g. boundary values) with no remediation and publishes artifacts for the unsupported notify template.
+      runs_on: RHEL EC2 node
+    - name: notify_chatroom.yml
+      path: disk-utilization/101-disk-threshold-routing/aap/playbooks/notify_chatroom.yml
+      description: Includes the tier-specific Mattermost template (ok, warn, critical, unsupported) and posts the remediation summary to chat.
+      runs_on: localhost (Mattermost API)
+
+cert-rotation-101:
+  status: active
+  items:
+    - name: renew_certificate.yml
+      path: cert-rotation/101-cert-lifecycle/aap/playbooks/renew_certificate.yml
+      description: Pulls a new PEM certificate from Vault CA, installs it for nginx, and reloads the service.
+      runs_on: RHEL node (nginx / PEM)
+    - name: renew_keystore_certificate.yml
+      path: cert-rotation/101-cert-lifecycle/aap/playbooks/renew_keystore_certificate.yml
+      description: Renews a Java keystore certificate for the API server, updating the keystore and restarting the application.
+      runs_on: RHEL node (Java keystore)
+    - name: validate_certificate.yml
+      path: cert-rotation/101-cert-lifecycle/aap/playbooks/validate_certificate.yml
+      description: Runs an OpenSSL TLS handshake check and reports certificate subject, issuer, and expiry after renewal.
+      runs_on: RHEL node
+    - name: notify_mattermost.yml
+      path: cert-rotation/101-cert-lifecycle/aap/playbooks/notify_mattermost.yml
+      description: Posts renewal status, agent confidence, and analysis summary to Mattermost after the workflow completes.
+      runs_on: localhost (Mattermost API)
+
+cert-rotation-201:
+  status: under-development
+
+cert-rotation-301:
+  status: under-development
+
+cert-rotation-102:
+  status: under-development
+
+service-health-101:
+  status: under-development
+
+patch-management-101:
+  status: under-development
+
+user-lifecycle-101:
+  status: under-development
+
+backup-management-101:
+  status: under-development
+
+subscription-management-101:
+  status: under-development
+
+kernel-compliance-101:
+  status: under-development
+
+incident-remediation-201:
+  status: under-development
+
+incident-remediation-301:
+  status: under-development

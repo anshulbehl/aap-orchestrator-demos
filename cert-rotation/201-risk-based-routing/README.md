@@ -21,3 +21,7 @@ flowchart TD
   F --> H[Run renewal after approval]
   H --> G
 ```
+
+## Playbooks
+
+🚧 **Under development** — playbook list and source links will be added when this demo is built.

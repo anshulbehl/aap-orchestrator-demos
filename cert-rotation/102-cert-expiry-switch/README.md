@@ -30,6 +30,10 @@ flowchart TD
   Validate --> Notify[Notify operators]
 ```
 
+## Playbooks
+
+🚧 **Under development** — playbook list and source links will be added when this demo is built.
+
 ## Relationship to other cert demos
 
 | Demo | Approach |

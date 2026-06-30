@@ -123,14 +123,14 @@ Branch-irrelevant fields are `unknown` / `0` / `false`. Re-sync the SCM project 
 
 ## Playbooks
 
-| Playbook | What it does |
-|---|---|
-| `check_disk.yml` | `df` on mount, bucket into `disk_tier`, publish artifacts for switch |
-| `remediate_disk_continue.yml` | Healthy path — debug + publish notify bundle |
-| `remediate_disk_cleanup.yml` | Remove dnf cache and old log archives; publish before/after stats |
-| `remediate_disk_expand.yml` | AWS EBS expand (localhost) → `growpart` + `xfs_growfs` on host |
-| `remediate_disk_fallback.yml` | Unexpected tier — no remediation, publish for unsupported notify |
-| `notify_chatroom.yml` | Include tier template (`ok` / `warn` / `critical` / `unsupported`) → Mattermost |
+| Playbook | What it does | Runs on |
+|---|---|---|
+| [`check_disk.yml`](https://github.com/ansible-tmm/aap-orchestrator-demos/blob/main/disk-utilization/101-disk-threshold-routing/aap/playbooks/check_disk.yml) | Reads filesystem usage on the target mount and publishes `disk_use_percent` and `disk_tier` artifacts for the switch. | RHEL EC2 node |
+| [`remediate_disk_continue.yml`](https://github.com/ansible-tmm/aap-orchestrator-demos/blob/main/disk-utilization/101-disk-threshold-routing/aap/playbooks/remediate_disk_continue.yml) | Healthy path when disk is below the warning threshold — logs status and publishes notify artifacts with no changes to the host. | RHEL EC2 node |
+| [`remediate_disk_cleanup.yml`](https://github.com/ansible-tmm/aap-orchestrator-demos/blob/main/disk-utilization/101-disk-threshold-routing/aap/playbooks/remediate_disk_cleanup.yml) | Reclaims dnf package cache and old log archives, then publishes before/after usage stats for the warning notify tier. | RHEL EC2 node |
+| [`remediate_disk_expand.yml`](https://github.com/ansible-tmm/aap-orchestrator-demos/blob/main/disk-utilization/101-disk-threshold-routing/aap/playbooks/remediate_disk_expand.yml) | Increases the root EBS volume in AWS, then runs `growpart` and `xfs_growfs` on the host for the critical expand path. | AWS (localhost) + RHEL EC2 node |
+| [`remediate_disk_fallback.yml`](https://github.com/ansible-tmm/aap-orchestrator-demos/blob/main/disk-utilization/101-disk-threshold-routing/aap/playbooks/remediate_disk_fallback.yml) | Handles unexpected switch tiers (e.g. boundary values) with no remediation and publishes artifacts for the unsupported notify template. | RHEL EC2 node |
+| [`notify_chatroom.yml`](https://github.com/ansible-tmm/aap-orchestrator-demos/blob/main/disk-utilization/101-disk-threshold-routing/aap/playbooks/notify_chatroom.yml) | Includes the tier-specific Mattermost template (ok / warn / critical / unsupported) and posts the remediation summary to chat. | localhost (Mattermost API) |
 
 Notify templates live under `aap/playbooks/tasks/notify/`. Warn and critical templates have separate check-mode vs run-mode wording.
 

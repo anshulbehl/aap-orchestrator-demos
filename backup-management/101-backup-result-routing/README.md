@@ -25,6 +25,10 @@ flowchart TD
   Switch -->|skipped| Log[JT: log_skipped]
 ```
 
+## Playbooks
+
+🚧 **Under development** — playbook list and source links will be added when this demo is built.
+
 ## Planned artifacts
 
 ```

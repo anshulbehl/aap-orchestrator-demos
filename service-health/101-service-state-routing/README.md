@@ -25,6 +25,10 @@ flowchart TB
   Switch -->|not-found| Install[JT: remediate_install_service]
 ```
 
+## Playbooks
+
+🚧 **Under development** — playbook list and source links will be added when this demo is built.
+
 ## Why not binary branching?
 
 The same four outcomes in a Controller-style workflow require nested success/failure nodes that still guess at failure meaning. The switch reads one artifact and routes by **meaning**.

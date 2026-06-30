@@ -22,6 +22,10 @@ flowchart TD
   E --> F[Notify operators]
 ```
 
+## Playbooks
+
+🚧 **Under development** — playbook list and source links will be added when this demo is built.
+
 ## Workflow (301 — coming soon)
 
 ```mermaid

@@ -615,6 +615,50 @@ a {
   color: #ddd;
 }
 
+.playbook-link {
+  color: #c4b5fd;
+  text-decoration: none;
+}
+
+.playbook-link:hover code {
+  background: #252525;
+  color: #fff;
+}
+
+.playbooks-dev {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 560px;
+  padding: 20px 24px;
+  border-radius: 12px;
+  border: 1px dashed #333;
+  background: #111;
+}
+
+.playbooks-dev__icon {
+  font-size: 32px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.playbooks-dev__title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.playbooks-dev__text {
+  margin: 0;
+  font-size: 14px;
+  color: #888;
+}
+
+.detail-table--playbooks td:first-child {
+  white-space: nowrap;
+}
+
 /* Footer — fixed to viewport bottom, beside sidebar */
 .site-footer {
   position: fixed;

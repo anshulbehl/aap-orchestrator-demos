@@ -1,0 +1,44 @@
+{% assign slug = include.slug | default: page.demo_slug %}
+{% assign pb = site.data.demo_playbooks[slug] %}
+{% assign gh_base = "https://github.com/" | append: site.repository | append: "/blob/main/" %}
+
+{% if pb %}
+<section class="detail-section" id="playbooks">
+  <h2>Playbooks</h2>
+
+  {% if pb.status == "under-development" %}
+    <div class="playbooks-dev">
+      <span class="playbooks-dev__icon" aria-hidden="true">🚧</span>
+      <div>
+        <p class="playbooks-dev__title">Under development</p>
+        <p class="playbooks-dev__text">Playbook list and source links will be added when this demo is built.</p>
+      </div>
+    </div>
+  {% else %}
+    <div class="detail-table-wrap">
+      <table class="detail-table detail-table--playbooks">
+        <thead>
+          <tr>
+            <th>Playbook</th>
+            <th>What it does</th>
+            <th>Runs on</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in pb.items %}
+            <tr>
+              <td>
+                <a href="{{ gh_base }}{{ item.path }}" class="playbook-link" target="_blank" rel="noopener">
+                  <code>{{ item.name }}</code>
+                </a>
+              </td>
+              <td>{{ item.description }}</td>
+              <td>{{ item.runs_on }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</section>
+{% endif %}

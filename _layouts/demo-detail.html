@@ -106,6 +106,8 @@ layout: default
 </section>
 {% endif %}
 
+{% include demo-playbooks.html slug=page.demo_slug %}
+
 {% if detail.why %}
 <section class="detail-section">
   <h2>{{ detail.why_heading | default: "Why a switch?" }}</h2>
@@ -127,6 +129,6 @@ layout: default
 {% if demo.status == "coming-soon" %}
 <section class="detail-section">
   <h2>Planned artifacts</h2>
-  <p>When built, this demo will include automation orchestrator workflow JSON and AAP playbooks under <code>{{ demo.github_path }}</code>. Playbooks and AO exports are not created yet.</p>
+  <p>When built, this demo will include automation orchestrator workflow JSON under <code>{{ demo.github_path }}</code>.</p>
 </section>
 {% endif %}

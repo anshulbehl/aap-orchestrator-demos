@@ -25,6 +25,10 @@ flowchart TD
   Switch -->|eol| Migrate[JT: flag_eol_migration]
 ```
 
+## Playbooks
+
+🚧 **Under development** — playbook list and source links will be added when this demo is built.
+
 ## Planned artifacts
 
 ```

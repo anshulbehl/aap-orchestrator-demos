@@ -25,6 +25,10 @@ flowchart TD
   Switch -->|unregistered| Register[JT: register_system]
 ```
 
+## Playbooks
+
+🚧 **Under development** — playbook list and source links will be added when this demo is built.
+
 ## Planned artifacts
 
 ```

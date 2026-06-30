@@ -31,3 +31,14 @@ Use these exact labels on GitHub Pages demo detail pages and in `_data/demos.yml
 | `github_path` | Repo folder path for display only (e.g. planned artifacts note) |
 
 Before adding or changing demo links, confirm the target file exists in git.
+
+## Playbooks section
+
+Every demo detail page includes a **Playbooks** section sourced from [`_data/demo_playbooks.yml`](_data/demo_playbooks.yml).
+
+| Status | Website | README |
+|---|---|---|
+| Active | Table with name, description, runs on, GitHub source link | Match the table in the demo's `github_doc` README |
+| Under development | 🚧 Under development banner | Add `## Playbooks` with under-development note |
+
+When adding playbooks to an active demo, update **both** `_data/demo_playbooks.yml` and the demo README table. Keep descriptions to 1–2 sentences.

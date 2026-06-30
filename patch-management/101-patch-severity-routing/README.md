@@ -29,6 +29,10 @@ flowchart TD
   Compliant --> Notify
 ```
 
+## Playbooks
+
+🚧 **Under development** — playbook list and source links will be added when this demo is built.
+
 ## Planned artifacts
 
 ```

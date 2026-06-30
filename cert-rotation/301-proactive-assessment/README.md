@@ -19,3 +19,7 @@ flowchart TD
   D --> F[Validate TLS]
   F --> G[Compliance report]
 ```
+
+## Playbooks
+
+🚧 **Under development** — playbook list and source links will be added when this demo is built.
