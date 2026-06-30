@@ -9,6 +9,8 @@
   data-status="{{ demo.status }}"
   data-category="{{ demo.category }}"
   data-tags="{{ demo.tags | join: ',' }}"
+  data-uses-ai="{{ demo.uses_ai }}"
+  data-search="{{ demo.title | downcase }} {{ demo.subtitle | downcase }} {{ demo.blurb | downcase }} {{ demo.category | replace: '-', ' ' | downcase }} {{ demo.tags | join: ' ' | downcase }}"
 >
   <a href="{{ card_href }}" class="demo-card__link"{% if demo.status != "active" %} tabindex="-1" aria-disabled="true"{% endif %}>
     <div class="demo-card__thumb" style="background: {{ demo.thumbnail.gradient }};">

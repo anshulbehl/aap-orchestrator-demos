@@ -1,0 +1,29 @@
+---
+description: Capitalization for "automation orchestrator" product name in docs and site copy
+globs: "**/*.{md,html,yml}"
+alwaysApply: true
+---
+
+# automation orchestrator naming
+
+When referring to Ansible Automation Platform's workflow engine, use **automation orchestrator** (lowercase) in running text.
+
+**Exception:** At the **beginning of a sentence** (including headings and list items that start a sentence), capitalize only the first letter: **Automation orchestrator**.
+
+## Correct
+
+- "Import the workflow JSON into automation orchestrator."
+- "Automation orchestrator routes on artifact values, not just job status."
+- "## What is automation orchestrator?"
+- "AAP 2.7+ with automation orchestrator"
+
+## Incorrect
+
+- "Automation Orchestrator" (title case)
+- "Orchestrator" alone when you mean the product (use "automation orchestrator")
+- "AO Orchestrator" or other mixed casing
+
+## Acronyms
+
+- **AO** and **AAP** stay uppercase when used as abbreviations.
+- Example: "AO is the abbreviation for automation orchestrator in this repo."

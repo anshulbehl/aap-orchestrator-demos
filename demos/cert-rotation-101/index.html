@@ -3,6 +3,7 @@ layout: default
 title: Intelligent Cert Lifecycle
 description: AI-driven certificate renewal routing
 demo_slug: cert-rotation-101
+mermaid: true
 ---
 
 {% assign demo = site.data.demos | where: "slug", page.demo_slug | first %}
@@ -31,7 +32,7 @@ demo_slug: cert-rotation-101
 <section class="detail-section">
   <h2>The use case</h2>
   <p>
-    Two certificates expire on production services at the same time. Splunk fires alerts to Automation Orchestrator.
+    Two certificates expire on production services at the same time. Splunk fires alerts to automation orchestrator.
     An AI agent analyzes each certificate, discovers available AAP job templates, and selects the correct renewal
     strategy — PEM for nginx, Java keystore for the API server — without hardcoded routing. An operator reviews
     the agent's analysis and confidence score, approves, and AAP renews and validates TLS automatically.
@@ -40,17 +41,7 @@ demo_slug: cert-rotation-101
 
 <section class="detail-section">
   <h2>Workflow</h2>
-  <pre class="detail-diagram">Splunk Alert (cert expired)
-    |
-AO Webhook Trigger
-    |
-Plan Renewal (AI agent — queries AAP, selects template)
-    |
-Approve Renewal (operator reviews analysis + confidence %)
-    |
-Run Renewal Job (dynamic: agent-selected template)
-    |
-Validate Renewal (TLS handshake check)</pre>
+  {% include workflow-diagram.html mermaid=demo.workflow_mermaid %}
 </section>
 
 <section class="detail-section">

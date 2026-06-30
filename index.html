@@ -1,32 +1,52 @@
 ---
 layout: default
 title: Demos
-description: Browse Automation Orchestrator demo workflows
+description: Browse automation orchestrator demo workflows
 ---
 
 {% assign all_demos = site.data.demos %}
 {% assign active_count = 0 %}
 {% assign soon_count = 0 %}
+{% assign rule_based_count = 0 %}
 {% for d in all_demos %}
   {% if d.status == "active" %}
     {% assign active_count = active_count | plus: 1 %}
   {% else %}
     {% assign soon_count = soon_count | plus: 1 %}
   {% endif %}
+  {% unless d.uses_ai %}
+    {% assign rule_based_count = rule_based_count | plus: 1 %}
+  {% endunless %}
 {% endfor %}
 
 <div class="hero">
   <h1>Demos</h1>
-  <p>Hands-on Automation Orchestrator workflows — AI agents, switch routing, approvals, and event-driven remediation.</p>
+  <p>Hands-on automation orchestrator workflows — AI agents, switch routing, approvals, and event-driven remediation.</p>
+  <div class="search-bar">
+    <svg class="search-bar__icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    </svg>
+    <input
+      type="search"
+      id="demo-search"
+      class="search-bar__input"
+      placeholder="Search demos by name, tag, or category…"
+      aria-label="Search demos"
+      autocomplete="off"
+    >
+  </div>
 </div>
 
 <div class="filters" role="tablist" aria-label="Filter demos">
   <button type="button" class="filter-pill active" data-filter="all">All <span class="count">{{ all_demos.size }}</span></button>
   <button type="button" class="filter-pill" data-filter="active">Active <span class="count">{{ active_count }}</span></button>
+  <button type="button" class="filter-pill" data-filter="rule-based">Rule-based <span class="count">{{ rule_based_count }}</span></button>
   <button type="button" class="filter-pill" data-filter="switch">Switch</button>
   <button type="button" class="filter-pill" data-filter="ai-agent">AI Agent</button>
   <button type="button" class="filter-pill" data-filter="coming-soon">Coming soon <span class="count">{{ soon_count }}</span></button>
 </div>
+
+<p class="filter-empty hidden" id="filter-empty" role="status">No demos match your search.</p>
 
 <section class="section" id="featured">
   <h2 class="section-heading">Featured</h2>

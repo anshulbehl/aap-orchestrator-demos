@@ -1,4 +1,4 @@
-# Intelligent Certificate Renewal with Automation Orchestrator
+# Intelligent Certificate Renewal with automation orchestrator
 ## Live Demo Script
 
 **Audience:** Tech preview customers, technical evaluators, Solutions Architects  
@@ -9,7 +9,7 @@
 
 > **Important framing guidance**
 >
-> This demo is an **example of what you can build with Automation Orchestrator** — not a prescriptive solution customers should deploy as-is. Certificate management is the use case chosen to illustrate AO's core capabilities: event-driven triggers, AI agent nodes, human-in-the-loop approvals, and dynamic AAP job execution.
+> This demo is an **example of what you can build with Automation orchestrator** — not a prescriptive solution customers should deploy as-is. Certificate management is the use case chosen to illustrate AO's core capabilities: event-driven triggers, AI agent nodes, human-in-the-loop approvals, and dynamic AAP job execution.
 >
 > Every customer's workflow will look different based on their certificate authority, monitoring stack, approval process, and infrastructure. The patterns are transferable. The specific workflow is a starting point.
 >
@@ -51,7 +51,7 @@
 
 ### Opening (~1 min)
 
-Hi, I'm [Your Name], Technical Marketing Manager from the Ansible team at Red Hat. Today I'm going to show you Ansible Automation Orchestrator in action — using certificate lifecycle management as our example use case.
+Hi, I'm [Your Name], Technical Marketing Manager from the Ansible team at Red Hat. Today I'm going to show you Ansible Automation orchestrator in action — using certificate lifecycle management as our example use case.
 
 Before I start: what I'm showing you is one workflow we built to illustrate what AO makes possible. The use case is certificate management, but the patterns — event-driven triggers, an AI agent that reasons and plans, human approval gates, dynamic AAP job execution — these apply to any automation challenge you're working on. Patch management, compliance enforcement, incident remediation. The building blocks are the same.
 
@@ -71,7 +71,7 @@ On the left: the Parasol Insurance website — a customer-facing site secured by
 
 Two different services. Two different certificate types. Both healthy right now.
 
-This is your normal production state. The goal of this demo is to show what happens when both go wrong at the same time — and how Automation Orchestrator handles it without a human figuring out which playbook to run for which service.
+This is your normal production state. The goal of this demo is to show what happens when both go wrong at the same time — and how Automation orchestrator handles it without a human figuring out which playbook to run for which service.
 
 ---
 
@@ -87,7 +87,7 @@ Two services down. Two different certificate types. Both blocking users. This is
 
 Traditionally, someone gets paged, has to figure out which cert type each service uses, find the right runbook, and manually execute the correct renewal procedure for each. That's time, risk, and human error in every step.
 
-We're going to let Automation Orchestrator handle it — intelligently.
+We're going to let Automation orchestrator handle it — intelligently.
 
 ---
 
@@ -104,9 +104,9 @@ Within seconds of the certificates expiring, Splunk has indexed both events. You
 
 > **Action:** Point to the service and cert_type fields in the Splunk results.
 
-The monitoring data includes the certificate type for each service. PEM for nginx. Java Keystore for the API server. This is the signal that Automation Orchestrator will use to make intelligent decisions.
+The monitoring data includes the certificate type for each service. PEM for nginx. Java Keystore for the API server. This is the signal that Automation orchestrator will use to make intelligent decisions.
 
-The Splunk alert fires automatically, sending both events as webhooks to Automation Orchestrator. No human had to notice. No ticket had to be created first.
+The Splunk alert fires automatically, sending both events as webhooks to Automation orchestrator. No human had to notice. No ticket had to be created first.
 
 ---
 
@@ -114,7 +114,7 @@ The Splunk alert fires automatically, sending both events as webhooks to Automat
 
 > **Action:** Switch to AO Workflow Runs page. Show two runs with status "Running" created at the same time.
 
-Automation Orchestrator has received two webhook alerts — one for each expired certificate. Two workflow runs started simultaneously. Same workflow definition. Different services.
+Automation orchestrator has received two webhook alerts — one for each expired certificate. Two workflow runs started simultaneously. Same workflow definition. Different services.
 
 This is the key point: one workflow handles both certificate types. The workflow itself doesn't know in advance which template to run. The AI agent figures that out at runtime.
 
@@ -190,13 +190,13 @@ Two different certificate types. Two different renewal strategies. One intellige
 
 ### Closing (~30 sec)
 
-What you just saw is Ansible Automation Orchestrator closing the loop between monitoring and remediation — intelligently.
+What you just saw is Ansible Automation orchestrator closing the loop between monitoring and remediation — intelligently.
 
 Splunk detected the problem. The AI agent reasoned about the correct remediation strategy for each certificate type, using the actual AAP job template catalog, the actual inventory, and the actual job history. The operator reviewed and approved. AAP executed with full governance.
 
 The workflow didn't have hardcoded if-statements for each certificate type. The agent figured it out at runtime. As you add new services, new certificate types, or new renewal strategies, the same workflow handles them — because the agent reasons, not routes.
 
-And again — this is one example of what you can build with Automation Orchestrator. Your certificate authority might be different. Your monitoring stack might be different. Your approval process might involve multiple teams. AO is flexible enough to handle all of that. What we've shown is the pattern: event-driven, AI-reasoned, human-governed, AAP-executed. That pattern works for any use case your team is trying to automate intelligently.
+And again — this is one example of what you can build with Automation orchestrator. Your certificate authority might be different. Your monitoring stack might be different. Your approval process might involve multiple teams. AO is flexible enough to handle all of that. What we've shown is the pattern: event-driven, AI-reasoned, human-governed, AAP-executed. That pattern works for any use case your team is trying to automate intelligently.
 
 ---
 

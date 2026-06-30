@@ -5,8 +5,10 @@
   level: "101"
   status: active
   featured: true
+  uses_ai: false
   tags:
     - Switch
+    - Rule-based
     - Mattermost
     - EC2
   thumbnail:
@@ -21,6 +23,18 @@
   github_path: disk-utilization/101-disk-threshold-routing/
   setup_guide: disk-utilization/101-disk-threshold-routing/README.md
   workflow_json: disk-utilization/101-disk-threshold-routing/ao/disk-demo-101.json
+  workflow_mermaid: |
+    flowchart TD
+      A[Manual trigger] --> B[Disk Utilization Check]
+      B --> C{Switch on disk_use_percent}
+      C -->|"< 80%"| D[Continue]
+      C -->|"80–95%"| E[Cleanup logs & cache]
+      C -->|"> 95%"| F[Expand EBS volume]
+      C -->|default| G[Fallback — manual review]
+      D --> H[Notify — OK]
+      E --> I[Notify — Warning]
+      F --> J[Notify — Critical]
+      G --> K[Notify — Unsupported]
 
 - slug: cert-rotation-101
   title: Intelligent Cert Lifecycle
@@ -29,6 +43,7 @@
   level: "101"
   status: active
   featured: true
+  uses_ai: true
   tags:
     - AI Agent
     - Approval
@@ -45,6 +60,13 @@
   github_path: cert-rotation/101-cert-lifecycle/
   setup_guide: cert-rotation/101-cert-lifecycle/SETUP_GUIDE.md
   workflow_json: cert-rotation/101-cert-lifecycle/ao/cert-demo-101-manual.json
+  workflow_mermaid: |
+    flowchart TD
+      A[Splunk alert — cert expired] --> B[AO webhook trigger]
+      B --> C[Plan renewal — AI agent]
+      C --> D[Approve renewal — operator]
+      D --> E[Run renewal job — dynamic template]
+      E --> F[Validate renewal — TLS check]
 
 - slug: cert-rotation-201
   title: Risk-Based Routing
@@ -53,6 +75,7 @@
   level: "201"
   status: coming-soon
   featured: false
+  uses_ai: true
   tags:
     - AI Agent
     - Switch
@@ -66,6 +89,17 @@
     setup_minutes: 30
   url: null
   github_path: cert-rotation/201-risk-based-routing/
+  workflow_mermaid: |
+    flowchart TD
+      A[Cert expiry event] --> B[AI risk assessment]
+      B --> C{Risk tier}
+      C -->|Low| D[Auto-renew]
+      C -->|Medium| E[Notify + renew]
+      C -->|High| F[Approval required]
+      D --> G[Validate TLS]
+      E --> G
+      F --> H[Run renewal after approval]
+      H --> G
 
 - slug: cert-rotation-301
   title: Proactive Assessment
@@ -74,9 +108,11 @@
   level: "301"
   status: coming-soon
   featured: false
+  uses_ai: false
   tags:
     - Scheduled
     - Monitoring
+    - Rule-based
   thumbnail:
     gradient: "linear-gradient(135deg, #1a2a3a 0%, #0d1520 100%)"
     icon: "📅"
@@ -87,26 +123,227 @@
     setup_minutes: 45
   url: null
   github_path: cert-rotation/301-proactive-assessment/
+  workflow_mermaid: |
+    flowchart TD
+      A[Scheduled scan trigger] --> B[Inventory certificate expiry]
+      B --> C{Expires within window?}
+      C -->|Yes| D[Renew proactively]
+      C -->|No| E[Log OK — no action]
+      D --> F[Validate TLS]
+      F --> G[Compliance report]
 
-- slug: incident-remediation-101
-  title: Service Restart on Alert
-  subtitle: Alert-driven service recovery
-  category: incident-remediation
-  level: "101"
+- slug: cert-rotation-102
+  title: Expiry Threshold Routing
+  subtitle: Rule-based cert countdown switch
+  category: cert-rotation
+  level: "102"
   status: coming-soon
   featured: false
+  uses_ai: false
   tags:
-    - Event-Driven
+    - Switch
+    - Rule-based
+    - Scheduled
   thumbnail:
-    gradient: "linear-gradient(135deg, #3a1a1a 0%, #1a0d0d 100%)"
-    icon: "🔄"
-  blurb: Monitoring alert triggers automated service restart and validation.
+    gradient: "linear-gradient(135deg, #1a2a4a 0%, #0d1528 100%)"
+    icon: "⏳"
+  blurb: Switch on cert_status from days remaining — skip, plan, renew, or emergency — no AI required.
   stats:
     workflows: 0
     playbooks: 0
     setup_minutes: 15
   url: null
-  github_path: incident-remediation/
+  github_path: cert-rotation/102-cert-expiry-switch/
+  workflow_mermaid: |
+    flowchart TD
+      A[Manual or schedule] --> B[Check cert expiry]
+      B --> C{cert_status}
+      C -->|healthy| D[Log OK]
+      C -->|plan| E[Open change request]
+      C -->|renew| F[Renew certificate]
+      C -->|emergency| G[Emergency renew]
+      F --> H[Validate TLS]
+      G --> H
+
+- slug: service-health-101
+  title: Service State Routing
+  subtitle: Four fixes from one service check
+  category: service-health
+  level: "101"
+  status: coming-soon
+  featured: false
+  uses_ai: false
+  tags:
+    - Switch
+    - Rule-based
+  thumbnail:
+    gradient: "linear-gradient(135deg, #1a3a1a 0%, #0d200d 100%)"
+    icon: "🩺"
+  blurb: Check httpd state, switch on service_state — log OK, start, restart, or install in one workflow.
+  stats:
+    workflows: 0
+    playbooks: 0
+    setup_minutes: 15
+  url: null
+  github_path: service-health/101-service-state-routing/
+  workflow_mermaid: |
+    flowchart TB
+      A[Manual or schedule] --> B[Check service]
+      B --> C{service_state}
+      C -->|active| D[Log OK]
+      C -->|inactive| E[Start service]
+      C -->|failed| F[Restart service]
+      C -->|not-found| G[Install service]
+
+- slug: patch-management-101
+  title: Patch Severity Routing
+  subtitle: One scan, four remediation strategies
+  category: patch-management
+  level: "101"
+  status: coming-soon
+  featured: false
+  uses_ai: false
+  tags:
+    - Switch
+    - Rule-based
+  thumbnail:
+    gradient: "linear-gradient(135deg, #3a2a1a 0%, #1a1008 100%)"
+    icon: "🩹"
+  blurb: Assess patch severity, switch on highest_severity — patch now, schedule, batch, or report compliant.
+  stats:
+    workflows: 0
+    playbooks: 0
+    setup_minutes: 20
+  url: null
+  github_path: patch-management/101-patch-severity-routing/
+  workflow_mermaid: |
+    flowchart TD
+      A[Manual or schedule] --> B[Patch assessment]
+      B --> C{highest_severity}
+      C -->|critical| D[Patch now]
+      C -->|important| E[Schedule change]
+      C -->|moderate| F[Weekly batch]
+      C -->|none| G[Report compliant]
+
+- slug: user-lifecycle-101
+  title: Request Type Routing
+  subtitle: One form, four runbooks
+  category: user-lifecycle
+  level: "101"
+  status: coming-soon
+  featured: false
+  uses_ai: false
+  tags:
+    - Switch
+    - Rule-based
+    - Webhook
+  thumbnail:
+    gradient: "linear-gradient(135deg, #2a3a4a 0%, #101820 100%)"
+    icon: "👤"
+  blurb: Survey or webhook sets request_type — provision new hire, contractor, role change, or termination.
+  stats:
+    workflows: 0
+    playbooks: 0
+    setup_minutes: 20
+  url: null
+  github_path: user-lifecycle/101-request-type-routing/
+  workflow_mermaid: |
+    flowchart TD
+      A[Survey or webhook] --> B{request_type}
+      B -->|new_hire| C[Provision new hire]
+      B -->|contractor| D[Provision contractor]
+      B -->|role_change| E[Update role]
+      B -->|termination| F[Terminate user]
+
+- slug: backup-management-101
+  title: Backup Result Routing
+  subtitle: Partial is neither pass nor fail
+  category: backup-management
+  level: "101"
+  status: coming-soon
+  featured: false
+  uses_ai: false
+  tags:
+    - Switch
+    - Rule-based
+  thumbnail:
+    gradient: "linear-gradient(135deg, #2a2a1a 0%, #141008 100%)"
+    icon: "💾"
+  blurb: Switch on backup_result — verify success, retry partial, escalate failed, or log skipped.
+  stats:
+    workflows: 0
+    playbooks: 0
+    setup_minutes: 15
+  url: null
+  github_path: backup-management/101-backup-result-routing/
+  workflow_mermaid: |
+    flowchart TD
+      A[Schedule or event] --> B[Check backup result]
+      B --> C{backup_result}
+      C -->|success| D[Verify backup]
+      C -->|partial| E[Retry partial]
+      C -->|failed| F[Escalate]
+      C -->|skipped| G[Log skipped]
+
+- slug: subscription-management-101
+  title: RHEL Subscription Routing
+  subtitle: Route by registration state
+  category: subscription-management
+  level: "101"
+  status: coming-soon
+  featured: false
+  uses_ai: false
+  tags:
+    - Switch
+    - Rule-based
+  thumbnail:
+    gradient: "linear-gradient(135deg, #4a1a1a 0%, #200808 100%)"
+    icon: "📋"
+  blurb: Check RHEL subscription status — registered, expiring, expired, or unregistered — each gets a different path.
+  stats:
+    workflows: 0
+    playbooks: 0
+    setup_minutes: 15
+  url: null
+  github_path: subscription-management/101-rhel-subscription-routing/
+  workflow_mermaid: |
+    flowchart TD
+      A[Schedule] --> B[Check subscription]
+      B --> C{subscription_status}
+      C -->|registered| D[Log compliant]
+      C -->|expiring| E[Notify expiring]
+      C -->|expired| F[Renew subscription]
+      C -->|unregistered| G[Register system]
+
+- slug: kernel-compliance-101
+  title: Kernel Compliance Routing
+  subtitle: Reboot required ≠ drift ≠ EOL
+  category: kernel-compliance
+  level: "101"
+  status: coming-soon
+  featured: false
+  uses_ai: false
+  tags:
+    - Switch
+    - Rule-based
+  thumbnail:
+    gradient: "linear-gradient(135deg, #1a1a3a 0%, #080818 100%)"
+    icon: "🐧"
+  blurb: Scan kernel compliance — compliant, reboot required, drift, or EOL — switch to the right response.
+  stats:
+    workflows: 0
+    playbooks: 0
+    setup_minutes: 15
+  url: null
+  github_path: kernel-compliance/101-kernel-compliance-routing/
+  workflow_mermaid: |
+    flowchart TD
+      A[Schedule] --> B[Scan kernel compliance]
+      B --> C{kernel_compliance}
+      C -->|compliant| D[Log OK]
+      C -->|reboot_required| E[Schedule reboot]
+      C -->|drift| F[Apply kernel update]
+      C -->|eol| G[Flag EOL migration]
 
 - slug: incident-remediation-201
   title: AI Incident Triage
@@ -115,6 +352,7 @@
   level: "201"
   status: coming-soon
   featured: false
+  uses_ai: true
   tags:
     - AI Agent
   thumbnail:
@@ -127,3 +365,41 @@
     setup_minutes: 30
   url: null
   github_path: incident-remediation/
+  workflow_mermaid: |
+    flowchart TD
+      A[Incident alert] --> B[AI triage agent]
+      B --> C[Select remediation strategy]
+      C --> D[Run playbook]
+      D --> E[Validate recovery]
+      E --> F[Notify operators]
+
+- slug: incident-remediation-301
+  title: Multi-Service Correlation
+  subtitle: Correlate alerts before remediation
+  category: incident-remediation
+  level: "301"
+  status: coming-soon
+  featured: false
+  uses_ai: true
+  tags:
+    - AI Agent
+    - Event-Driven
+  thumbnail:
+    gradient: "linear-gradient(135deg, #1a2a3a 0%, #0a1018 100%)"
+    icon: "🔗"
+  blurb: Correlate alerts across services, identify root cause, then route to targeted or AI-assisted remediation.
+  stats:
+    workflows: 0
+    playbooks: 0
+    setup_minutes: 45
+  url: null
+  github_path: incident-remediation/
+  workflow_mermaid: |
+    flowchart TD
+      A[Multiple correlated alerts] --> B[Correlate services]
+      B --> C{Root cause identified?}
+      C -->|Yes| D[Targeted remediation]
+      C -->|No| E[AI triage agent]
+      D --> F[Validate recovery]
+      E --> F
+      F --> G[Notify operators]

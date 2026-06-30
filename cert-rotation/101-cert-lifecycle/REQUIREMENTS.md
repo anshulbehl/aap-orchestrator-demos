@@ -2,14 +2,25 @@
 
 ## What This Demo Shows
 
-A monitoring alert fires for an expired nginx TLS certificate. Automation Orchestrator receives the alert, an AI agent plans the renewal (selects the correct job template and variables), an operator approves, AAP renews the certificate from a Vault CA, and the workflow validates the new cert is healthy.
+A monitoring alert fires for an expired nginx TLS certificate. Automation orchestrator receives the alert, an AI agent plans the renewal (selects the correct job template and variables), an operator approves, AAP renews the certificate from a Vault CA, and the workflow validates the new cert is healthy.
+
+## Workflow
+
+```mermaid
+flowchart TD
+  A[Splunk alert — cert expired] --> B[AO webhook trigger]
+  B --> C[Plan renewal — AI agent]
+  C --> D[Approve renewal — operator]
+  D --> E[Run renewal job — dynamic template]
+  E --> F[Validate renewal — TLS check]
+```
 
 ## Prerequisites
 
 | Component | Required | Details |
 |-----------|----------|---------|
-| AAP Controller | Yes | 2.5+ with Automation Orchestrator |
-| Automation Orchestrator | Yes | Connected to AAP over SSL |
+| AAP Controller | Yes | 2.5+ with automation orchestrator |
+| automation orchestrator | Yes | Connected to AAP over SSL |
 | VM | Yes | 1x RHEL 9, SSH accessible from AAP |
 | HashiCorp Vault | Yes | Runs as container on the VM (provisioned by setup playbook) |
 | OpenShift | No | Not needed for this level |
@@ -44,7 +55,7 @@ curl -vk https://100.48.81.58
 # 5. Register job templates in AAP
 ansible-playbook -i inventory/hosts.yml setup/setup_aap.yml
 
-# 6. Import ao/cert-reactive.json into Automation Orchestrator
+# 6. Import ao/cert-reactive.json into automation orchestrator
 
 # 7. Trigger the alert
 ./test/trigger_alert.sh <AO_HOST> <WEBHOOK_TOKEN>

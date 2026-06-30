@@ -3,6 +3,7 @@ layout: default
 title: Disk Utilization & Remediation
 description: Proportional disk remediation with switch routing
 demo_slug: disk-utilization-101
+mermaid: true
 ---
 
 {% assign demo = site.data.demos | where: "slug", page.demo_slug | first %}
@@ -39,17 +40,7 @@ demo_slug: disk-utilization-101
 
 <section class="detail-section">
   <h2>Workflow</h2>
-  <pre class="detail-diagram">Check disk usage
-       |
-  Switch on disk_use_percent
-       |
--------------------------------------------------
-&lt;80%     80-95%     &gt;95%     (default)
-  |         |          |          |
-Continue   Cleanup   Expand    Fallback
-  |         |          |          |
- Notify    Notify    Notify    Notify
- (ok)      (warn)   (critical) (unsupported)</pre>
+  {% include workflow-diagram.html mermaid=demo.workflow_mermaid %}
 </section>
 
 <section class="detail-section">

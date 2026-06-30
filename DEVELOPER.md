@@ -42,7 +42,7 @@ Each level contains:
 <level>/
   REQUIREMENTS.md   # What infrastructure you need
   SETUP_GUIDE.md    # Step-by-step setup instructions
-  ao/               # Automation Orchestrator workflow JSON (importable)
+  ao/               # automation orchestrator workflow JSON (importable)
   aap/playbooks/    # Ansible playbooks registered as AAP job templates
   setup/            # Playbooks to provision the demo environment
   static/           # Static files served by demo web services
@@ -64,12 +64,19 @@ aap-orchestrator-demos/
 ├── cert-rotation/
 │   ├── README.md
 │   ├── 101-cert-lifecycle/            # Active
+│   ├── 102-cert-expiry-switch/        # Coming soon
 │   ├── 201-risk-based-routing/        # Coming soon
 │   └── 301-proactive-assessment/      # Coming soon
 ├── disk-utilization/
 │   ├── README.md
 │   └── 101-disk-threshold-routing/    # Active
-└── incident-remediation/              # Coming soon
+├── service-health/                    # Coming soon
+├── patch-management/                  # Coming soon
+├── user-lifecycle/                    # Coming soon
+├── backup-management/                 # Coming soon
+├── subscription-management/           # Coming soon
+├── kernel-compliance/                 # Coming soon
+└── incident-remediation/              # Coming soon (201/301)
 ```
 
 ## Cert rotation 101
@@ -120,7 +127,7 @@ See [disk-utilization/101-disk-threshold-routing/README.md](disk-utilization/101
 
 | Component | Details |
 |---|---|
-| AAP 2.7+ with AO | Controller + Automation Orchestrator |
+| AAP 2.7+ with AO | Controller + automation orchestrator |
 | Demo VM | 1x RHEL 9, t3.small or equivalent |
 | HashiCorp Vault | Container on demo VM (cert demo; provisioned automatically) |
 | Splunk | Container on bastion/monitoring host (cert demo) |

@@ -4,7 +4,7 @@
 
 | Component | Purpose | How to Provision |
 |-----------|---------|-----------------|
-| AAP 2.7 with AO | Controller + Orchestrator | `aws-aap-containerized` repo or `aap-images` |
+| AAP 2.7 with AO | Controller + automation orchestrator | `aws-aap-containerized` repo or `aap-images` |
 | SSL for AAP | AO needs HTTPS to AAP | `ansible_platform_ssl` repo with `mcp_proxy_enabled: true` |
 | Demo VM | nginx + api-server with certs | EC2 t3.small, provisioned by setup playbooks |
 | Splunk | Cert monitoring + alerts | Container on bastion (or OCP) |
@@ -274,8 +274,8 @@ echo | openssl s_client -connect certdemo.demoredhat.com:8443 2>/dev/null | open
 |---------|------|---------|
 | AAP Gateway | 443 (proxied to 8444 via nginx SSL) | AAP UI and API |
 | AAP MCP | 8448 (proxied to 8449 via nginx SSL) | MCP server |
-| AO API | 8000 | Orchestrator API |
-| AO UI | 8080 | Orchestrator web interface |
+| AO API | 8000 | automation orchestrator API |
+| AO UI | 8080 | automation orchestrator web interface |
 | AO Webhooks | 8080 | Webhook triggers |
 | Splunk UI | 8000 | Splunk web interface |
 | Splunk HEC | 8088 | HTTP Event Collector |

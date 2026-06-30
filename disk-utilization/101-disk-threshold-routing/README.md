@@ -13,11 +13,11 @@ Every ops team deals with disk pressure. The wrong automation treats it as binar
 | Disk is critical (`> 95%`) | Expand the root EBS volume in AWS, grow the partition and XFS filesystem on the host, report before/after volume size |
 | Switch can't classify (default port) | No automated fix — notify as unsupported and flag for manual review |
 
-The flow is always the same shape: **check → route → remediate → notify**. Ansible playbooks do the work on the host (and AWS for expand). Automation Orchestrator wires the steps together and passes artifacts between them so each job knows what the previous one found.
+The flow is always the same shape: **check → route → remediate → notify**. Ansible playbooks do the work on the host (and AWS for expand). Automation orchestrator wires the steps together and passes artifacts between them so each job knows what the previous one found.
 
 ## Why a switch — not success/failure branching
 
-| Classic workflow branching | Orchestrator switch |
+| Classic workflow branching | automation orchestrator switch |
 |---|---|
 | Success / failure / always | Route on a **value** (`disk_use_percent`) |
 | Nested decision nodes | One switch, four ports |
@@ -27,24 +27,18 @@ The check playbook publishes `disk_use_percent` and `disk_tier` via `set_stats`.
 
 ## Workflow
 
-```
-Manual trigger
-      |
-Disk Utilization Check  (JT 115)
-      |
-Switch on disk_use_percent
-      |
-  +---+---+---+---+
-  |   |   |   |   |
- <80 80-95 >95 default
-  |   |   |   |
-  v   v   v   v
-Continue Cleanup Expand Fallback
- (118)  (116)  (119)  (120)
-  |   |   |   |
-  v   v   v   v
-Notify Notify Notify Notify
- (117)  (117)  (117)  (117)
+```mermaid
+flowchart TD
+  A[Manual trigger] --> B[Disk Utilization Check — JT 115]
+  B --> C{Switch on disk_use_percent}
+  C -->|"< 80%"| D[Continue — JT 118]
+  C -->|"80–95%"| E[Cleanup — JT 116]
+  C -->|"> 95%"| F[Expand — JT 119]
+  C -->|default| G[Fallback — JT 120]
+  D --> H[Notify — JT 117]
+  E --> H
+  F --> H
+  G --> H
 ```
 
 Import [`ao/disk-demo-101.json`](ao/disk-demo-101.json) — this is the **working nostromo export** with all four branches and per-branch notify nodes. Activity UUIDs and `credential_id` are environment-specific; update `job_template_id` values if your Controller IDs differ.
@@ -73,7 +67,7 @@ Thresholds are also defined in `group_vars/all.yml` (`disk_warn_threshold: 80`, 
 
 ## What you need
 
-- AAP 2.7+ with Automation Orchestrator
+- AAP 2.7+ with automation orchestrator
 - One RHEL EC2 host AAP can SSH to
 - AWS credentials on the execution environment for the expand path (EBS volume modification)
 - Mattermost API token on the notify job template (`api_chat_token`)
@@ -84,7 +78,7 @@ Thresholds are also defined in `group_vars/all.yml` (`disk_warn_threshold: 80`, 
 
 **1. Register six job templates** from `aap/playbooks/` (see table above).
 
-**2. Import** [`ao/disk-demo-101.json`](ao/disk-demo-101.json) into Orchestrator.
+**2. Import** [`ao/disk-demo-101.json`](ao/disk-demo-101.json) into automation orchestrator.
 
 **3. Adjust** `job_template_id` and `credential_id` on each node if your environment differs from nostromo.
 

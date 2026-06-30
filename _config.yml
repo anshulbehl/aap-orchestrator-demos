@@ -1,5 +1,5 @@
-title: AAP Orchestrator Demos
-description: Hands-on Automation Orchestrator demo workflows
+title: AAP automation orchestrator demos
+description: Hands-on automation orchestrator demo workflows
 url: https://ansible-tmm.github.io
 baseurl: /aap-orchestrator-demos
 repository: ansible-tmm/aap-orchestrator-demos
@@ -17,6 +17,12 @@ exclude:
   - cert-rotation/
   - disk-utilization/
   - incident-remediation/
+  - service-health/
+  - patch-management/
+  - user-lifecycle/
+  - backup-management/
+  - subscription-management/
+  - kernel-compliance/
   - collections/
   - shared/
   - README.md

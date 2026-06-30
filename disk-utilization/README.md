@@ -1,6 +1,6 @@
 # Disk Utilization Demos
 
-Proportional disk remediation with **Automation Orchestrator** — check usage, respond at the right level, tell the team what happened.
+Proportional disk remediation with **automation orchestrator** — check usage, respond at the right level, tell the team what happened.
 
 ## The use case
 
@@ -17,9 +17,9 @@ On a RHEL EC2 host, the critical path can expand the root EBS volume in AWS, gro
 
 **One-liner:** *Don't page someone at 72%. Don't just log at 97%.*
 
-## Why Orchestrator switches fit here
+## Why automation orchestrator switches fit here
 
-Classic AAP workflows branch on success or failure. Disk utilization isn't pass/fail — it's a spectrum. An Orchestrator **switch** routes on `disk_use_percent` in one step: four ports, four proportionate responses, four small playbooks instead of one playbook full of `when:` conditions.
+Classic AAP workflows branch on success or failure. Disk utilization isn't pass/fail — it's a spectrum. An automation orchestrator **switch** routes on `disk_use_percent` in one step: four ports, four proportionate responses, four small playbooks instead of one playbook full of `when:` conditions.
 
 ## Demos
 
@@ -29,18 +29,17 @@ Classic AAP workflows branch on success or failure. Disk utilization isn't pass/
 
 ## Architecture (101)
 
-```
-Check disk usage
-       |
-  Switch on %
-       |
--------------------------------------------------
-<80%     80-95%     >95%     (default)
-  |         |          |          |
-Continue   Cleanup   Expand    Fallback
-  |         |          |          |
- Notify    Notify    Notify    Notify
- (ok)      (warn)   (critical) (unsupported)
+```mermaid
+flowchart TD
+  A[Check disk usage] --> B{Switch on disk_use_percent}
+  B -->|"< 80%"| C[Continue]
+  B -->|"80–95%"| D[Cleanup]
+  B -->|"> 95%"| E[Expand]
+  B -->|default| F[Fallback]
+  C --> G[Notify — OK]
+  D --> H[Notify — Warning]
+  E --> I[Notify — Critical]
+  F --> J[Notify — Unsupported]
 ```
 
 Each branch runs a focused remediate job template, publishes results via `set_stats`, and notifies the team with a message tailored to that tier.
