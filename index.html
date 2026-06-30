@@ -1,0 +1,51 @@
+---
+layout: default
+title: Demos
+description: Browse Automation Orchestrator demo workflows
+---
+
+{% assign all_demos = site.data.demos %}
+{% assign active_count = 0 %}
+{% assign soon_count = 0 %}
+{% for d in all_demos %}
+  {% if d.status == "active" %}
+    {% assign active_count = active_count | plus: 1 %}
+  {% else %}
+    {% assign soon_count = soon_count | plus: 1 %}
+  {% endif %}
+{% endfor %}
+
+<div class="hero">
+  <h1>Demos</h1>
+  <p>Hands-on Automation Orchestrator workflows — AI agents, switch routing, approvals, and event-driven remediation.</p>
+</div>
+
+<div class="filters" role="tablist" aria-label="Filter demos">
+  <button type="button" class="filter-pill active" data-filter="all">All <span class="count">{{ all_demos.size }}</span></button>
+  <button type="button" class="filter-pill" data-filter="active">Active <span class="count">{{ active_count }}</span></button>
+  <button type="button" class="filter-pill" data-filter="switch">Switch</button>
+  <button type="button" class="filter-pill" data-filter="ai-agent">AI Agent</button>
+  <button type="button" class="filter-pill" data-filter="coming-soon">Coming soon <span class="count">{{ soon_count }}</span></button>
+</div>
+
+<section class="section" id="featured">
+  <h2 class="section-heading">Featured</h2>
+  <div class="card-grid card-grid--featured">
+    {% for demo in all_demos %}
+      {% if demo.featured %}
+        {% include demo-card.html demo=demo featured=true %}
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section" id="all-demos">
+  <h2 class="section-heading">All demos</h2>
+  <div class="card-grid card-grid--all">
+    {% for demo in all_demos %}
+      {% unless demo.featured %}
+        {% include demo-card.html demo=demo featured=false %}
+      {% endunless %}
+    {% endfor %}
+  </div>
+</section>

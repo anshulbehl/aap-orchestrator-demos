@@ -1,120 +1,41 @@
 # AAP Automation Orchestrator Demos
 
-Hands-on demos for **Ansible Automation Platform Automation Orchestrator (AO)**. Each use case shows how AO combines task-driven automation, event-driven response, and AI-powered decision-making into intelligent, self-healing workflows.
+Hands-on demos for **Ansible Automation Platform Automation Orchestrator (AO)** — intelligent workflows that combine Ansible playbooks, AI agents, approvals, and event-driven triggers.
+
+**[Browse demos on GitHub Pages →](https://ansible-tmm.github.io/aap-orchestrator-demos/)**
+
+**[Developer setup & technical docs →](DEVELOPER.md)**
 
 ## What is Automation Orchestrator?
 
-Automation Orchestrator is the workflow engine in AAP that lets you build visual, multi-step automation workflows combining:
-- **AI agent nodes** that reason and make decisions using LLMs
-- **AAP job template nodes** that execute Ansible playbooks
-- **Approval nodes** for human-in-the-loop governance
-- **Event-driven triggers** that react to alerts from Splunk, Prometheus, Dynatrace, and more
-- **Condition and switch nodes** for intelligent routing
+Automation Orchestrator is the workflow engine in AAP for visual, multi-step automation:
 
-## Use Cases
+- **AI agent nodes** — reason and decide using LLMs
+- **AAP job template nodes** — run Ansible playbooks
+- **Approval nodes** — human-in-the-loop governance
+- **Event triggers** — react to Splunk, Prometheus, webhooks, and more
+- **Switch nodes** — route on a value, not just success/failure
 
-| Use Case | Description | Status |
-|---|---|---|
-| [cert-rotation/](cert-rotation/) | AI-driven certificate lifecycle management with intelligent routing | Active |
-| [disk-utilization/](disk-utilization/) | Switch-based disk threshold routing (continue / cleanup / escalate) | Active |
-| [incident-remediation/](incident-remediation/) | AI-assisted incident triage and auto-remediation | Coming soon |
+## Demo catalog
 
-## How Demos Are Organized
+| Demo | Level | Status | Description |
+|---|---|---|---|
+| [Disk Utilization & Remediation](disk-utilization/101-disk-threshold-routing/) | 101 | **Active** | Check disk usage → switch on % → continue, cleanup, EBS expand, or fallback → Mattermost notify |
+| [Intelligent Cert Lifecycle](cert-rotation/101-cert-lifecycle/) | 101 | **Active** | AI agent picks PEM vs keystore renewal; operator approves; AAP renews and validates |
+| [Risk-Based Routing](cert-rotation/201-risk-based-routing/) | 201 | Coming soon | Risk-tier routing for certificate renewal |
+| [Proactive Assessment](cert-rotation/301-proactive-assessment/) | 301 | Coming soon | Scan-before-expiry workflows |
+| [Incident Remediation](incident-remediation/) | 101+ | Coming soon | AI-assisted incident triage and auto-remediation |
 
-```
-<use-case>/
-  101-<name>/    # Entry level: minimal infrastructure, proves the concept
-  201-<name>/    # Intermediate: more services, smarter routing
-  301-<name>/    # Advanced: full lifecycle, monitoring integration
-```
+Use cases are grouped by folder:
 
-Each level contains:
-```
-<level>/
-  REQUIREMENTS.md   # What infrastructure you need
-  SETUP_GUIDE.md    # Step-by-step setup instructions
-  ao/               # Automation Orchestrator workflow JSON files (importable)
-  aap/playbooks/    # Ansible playbooks registered as AAP job templates
-  setup/            # Playbooks to provision the demo environment
-  static/           # Static files served by demo web services
-  test/             # Scripts to trigger and validate the demo
-  inventory/        # Ansible inventory
-  group_vars/       # Variable defaults
-```
-
-## Quick Start (Cert Rotation 101)
-
-```bash
-# Clone the repo
-git clone https://github.com/ansible-tmm/aap-orchestrator-demos.git
-cd aap-orchestrator-demos
-
-# Install required collections
-ansible-galaxy collection install -r collections/requirements.yml
-
-# Follow the setup guide
-cat cert-rotation/101-cert-lifecycle/SETUP_GUIDE.md
-```
-
-## The Cert Rotation 101 Demo
-
-**Story:** Two certificates expire simultaneously on production services. Splunk detects both and fires alerts to AO. A single AI-powered workflow handles both, automatically selecting the correct renewal strategy for each certificate type.
-
-- **nginx** on port 443 uses a **PEM certificate** → agent selects `Renew Certificate` template
-- **API server** on port 8443 uses a **Java keystore** → agent selects `Renew Java Keystore Certificate` template
-
-The agent doesn't need to be told which template to use. It discovers the available job templates from AAP, reads the host variables, checks past job run history, and reasons about the correct approach. This is **intelligent routing without a single hardcoded if-statement**.
-
-```
-Splunk Alert (cert expired)
-    |
-AO Webhook Trigger
-    |
-Plan Renewal (AI agent - queries AAP, selects correct template)
-    |
-Approve Renewal (operator reviews agent analysis + confidence %)
-    |
-Run Renewal Job (dynamic: agent-selected template)
-    |
-Validate Renewal (TLS handshake check)
-```
-
-## AO vs AAP Workflow Comparison
-
-| Capability | AAP Workflow | AO Workflow |
-|---|---|---|
-| Template selection | Hardcoded in workflow node | AI agent discovers and selects at runtime |
-| Multi-cert routing | Requires conditions per cert type | Agent reasons about cert type automatically |
-| Approval context | Basic approve/deny | Agent analysis, confidence %, blast radius |
-| Event triggers | Requires EDA rulebook | Native webhook triggers (Splunk, Prometheus, etc.) |
-| Visual builder | YAML defined | Drag-and-drop with live execution view |
-
-## Infrastructure Requirements (101 Demo)
-
-| Component | Details |
+| Folder | Focus |
 |---|---|
-| AAP 2.7+ with AO | Controller + Automation Orchestrator |
-| Demo VM | 1x RHEL 9, t3.small or equivalent |
-| HashiCorp Vault | Runs as container on the demo VM (provisioned automatically) |
-| Splunk | Runs as container on bastion/monitoring host |
-| LiteLLM | AI proxy for AO agent nodes |
-| DNS | `certdemo.demoredhat.com` pointing to the demo VM |
+| [cert-rotation/](cert-rotation/) | Certificate lifecycle with AI-driven routing |
+| [disk-utilization/](disk-utilization/) | Proportional disk remediation with switch routing |
+| [incident-remediation/](incident-remediation/) | Incident triage and remediation (coming soon) |
 
-## Repository Structure
+## Quick links
 
-```
-aap-orchestrator-demos/
-├── README.md                          # This file
-├── DEMO_LEVELS.md                     # 101/201/301 convention explained
-├── collections/
-│   └── requirements.yml               # Ansible collections needed
-├── cert-rotation/
-│   ├── README.md
-│   ├── 101-cert-lifecycle/            # Active demo
-│   ├── 201-risk-based-routing/        # Coming soon
-│   └── 301-proactive-assessment/      # Coming soon
-├── disk-utilization/
-│   ├── README.md
-│   └── 101-disk-threshold-routing/    # Active demo
-└── incident-remediation/              # Coming soon
-```
+- **Browse all demos (cards + filters):** https://ansible-tmm.github.io/aap-orchestrator-demos/
+- **Setup guides:** [DEVELOPER.md](DEVELOPER.md)
+- **Demo levels (101/201/301):** [DEMO_LEVELS.md](DEMO_LEVELS.md)

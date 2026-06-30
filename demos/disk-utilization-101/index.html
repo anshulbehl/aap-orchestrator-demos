@@ -1,0 +1,76 @@
+---
+layout: default
+title: Disk Utilization & Remediation
+description: Proportional disk remediation with switch routing
+demo_slug: disk-utilization-101
+---
+
+{% assign demo = site.data.demos | where: "slug", page.demo_slug | first %}
+{% assign repo = site.repository %}
+{% assign gh_base = "https://github.com/" | append: repo | append: "/blob/main/" %}
+
+<a href="{{ '/' | relative_url }}" class="back-link">← All demos</a>
+
+<div class="detail-hero">
+  <h1>{{ demo.title }}</h1>
+  <p class="subtitle">{{ demo.subtitle }}</p>
+  <div class="detail-tags">
+    <span class="tag">Level {{ demo.level }}</span>
+    {% for tag in demo.tags %}
+      <span class="tag">{{ tag }}</span>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="cta-row">
+  <a href="{{ gh_base }}{{ demo.github_path }}README.md" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
+  <a href="{{ gh_base }}{{ demo.setup_guide }}" class="btn btn-secondary" target="_blank" rel="noopener">Setup guide</a>
+  <a href="{{ gh_base }}{{ demo.workflow_json }}" class="btn btn-secondary" target="_blank" rel="noopener">Import workflow JSON</a>
+</div>
+
+<section class="detail-section">
+  <h2>The use case</h2>
+  <p>
+    Servers run out of disk space at different urgency levels. At 72% you do nothing. At 85% you reclaim
+    cache and old logs before it hurts. At 97% you add capacity — on EC2, expand the EBS volume, grow the
+    partition, and extend XFS. Each path posts a tier-specific Mattermost message so the team knows what ran.
+  </p>
+</section>
+
+<section class="detail-section">
+  <h2>Workflow</h2>
+  <pre class="detail-diagram">Check disk usage
+       |
+  Switch on disk_use_percent
+       |
+-------------------------------------------------
+&lt;80%     80-95%     &gt;95%     (default)
+  |         |          |          |
+Continue   Cleanup   Expand    Fallback
+  |         |          |          |
+ Notify    Notify    Notify    Notify
+ (ok)      (warn)   (critical) (unsupported)</pre>
+</section>
+
+<section class="detail-section">
+  <h2>What you'll see</h2>
+  <p>
+    Four switch ports, four small remediate playbooks, and four notify templates (green, orange, purple, red).
+    Use <code>test_disk_use_percent</code> on the check job to demo each branch without filling the disk.
+  </p>
+</section>
+
+<section class="detail-section">
+  <h2>Media placeholders</h2>
+  <div class="media-placeholder">
+    <h3>Suggested screenshots &amp; recordings</h3>
+    <p>Add these to bring the demo page to life:</p>
+    <ul>
+      <li>AO workflow canvas showing switch + four branches</li>
+      <li>Mattermost messages for ok, warn, critical, and unsupported tiers</li>
+      <li>Before/after <code>df</code> output on cleanup path</li>
+      <li>EBS volume size before/after on expand path</li>
+      <li>30-second screen recording: trigger → switch → remediate → notify</li>
+    </ul>
+  </div>
+</section>

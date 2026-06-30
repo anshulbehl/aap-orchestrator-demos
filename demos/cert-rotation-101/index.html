@@ -1,0 +1,77 @@
+---
+layout: default
+title: Intelligent Cert Lifecycle
+description: AI-driven certificate renewal routing
+demo_slug: cert-rotation-101
+---
+
+{% assign demo = site.data.demos | where: "slug", page.demo_slug | first %}
+{% assign repo = site.repository %}
+{% assign gh_base = "https://github.com/" | append: repo | append: "/blob/main/" %}
+
+<a href="{{ '/' | relative_url }}" class="back-link">← All demos</a>
+
+<div class="detail-hero">
+  <h1>{{ demo.title }}</h1>
+  <p class="subtitle">{{ demo.subtitle }}</p>
+  <div class="detail-tags">
+    <span class="tag">Level {{ demo.level }}</span>
+    {% for tag in demo.tags %}
+      <span class="tag">{{ tag }}</span>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="cta-row">
+  <a href="{{ gh_base }}{{ demo.github_path }}README.md" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
+  <a href="{{ gh_base }}{{ demo.setup_guide }}" class="btn btn-secondary" target="_blank" rel="noopener">Setup guide</a>
+  <a href="{{ gh_base }}{{ demo.workflow_json }}" class="btn btn-secondary" target="_blank" rel="noopener">Import workflow JSON</a>
+</div>
+
+<section class="detail-section">
+  <h2>The use case</h2>
+  <p>
+    Two certificates expire on production services at the same time. Splunk fires alerts to Automation Orchestrator.
+    An AI agent analyzes each certificate, discovers available AAP job templates, and selects the correct renewal
+    strategy — PEM for nginx, Java keystore for the API server — without hardcoded routing. An operator reviews
+    the agent's analysis and confidence score, approves, and AAP renews and validates TLS automatically.
+  </p>
+</section>
+
+<section class="detail-section">
+  <h2>Workflow</h2>
+  <pre class="detail-diagram">Splunk Alert (cert expired)
+    |
+AO Webhook Trigger
+    |
+Plan Renewal (AI agent — queries AAP, selects template)
+    |
+Approve Renewal (operator reviews analysis + confidence %)
+    |
+Run Renewal Job (dynamic: agent-selected template)
+    |
+Validate Renewal (TLS handshake check)</pre>
+</section>
+
+<section class="detail-section">
+  <h2>What you'll see</h2>
+  <p>
+    The same workflow handles PEM and keystore certificates. The agent reasons about cert type from inventory
+    and past job history. Approval nodes show blast radius and confidence — not just approve/deny.
+  </p>
+</section>
+
+<section class="detail-section">
+  <h2>Media placeholders</h2>
+  <div class="media-placeholder">
+    <h3>Suggested screenshots &amp; recordings</h3>
+    <p>Add these to bring the demo page to life:</p>
+    <ul>
+      <li>Splunk alert payload → AO webhook trigger</li>
+      <li>AI agent analysis panel with template selection reasoning</li>
+      <li>Approval node showing confidence % and blast radius</li>
+      <li>Side-by-side PEM vs keystore renewal job output</li>
+      <li>Validate job TLS handshake success</li>
+    </ul>
+  </div>
+</section>

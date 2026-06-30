@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a href="{{ '/' | relative_url }}" class="sidebar-logo">
+        <span class="logo-mark">AO</span>
+        <span class="logo-text">Orchestrator Demos</span>
+      </a>
+
+      <nav class="sidebar-nav">
+        <p class="nav-heading">Explore</p>
+        <a href="{{ '/' | relative_url }}" class="nav-link{% if page.url == '/' %} active{% endif %}">All demos</a>
+        <a href="{{ '/' | relative_url }}#active" class="nav-link" data-filter-nav="active">Active</a>
+        <a href="{{ '/' | relative_url }}#coming-soon" class="nav-link" data-filter-nav="coming-soon">Coming soon</a>
+
+        <p class="nav-heading">Categories</p>
+        <a href="{{ '/' | relative_url }}#cert-rotation" class="nav-link" data-filter-nav="cert-rotation">Cert rotation</a>
+        <a href="{{ '/' | relative_url }}#disk-utilization" class="nav-link" data-filter-nav="disk-utilization">Disk utilization</a>
+        <a href="{{ '/' | relative_url }}#incident-remediation" class="nav-link" data-filter-nav="incident-remediation">Incident remediation</a>
+
+        <p class="nav-heading">Resources</p>
+        <a href="https://github.com/{{ site.repository }}" class="nav-link" target="_blank" rel="noopener">GitHub repo</a>
+        <a href="https://github.com/{{ site.repository }}/blob/main/DEVELOPER.md" class="nav-link" target="_blank" rel="noopener">Developer guide</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      {{ content }}
+    </main>
+  </div>
+
+  {% if page.layout == 'default' and page.url == '/' %}
+  <script src="{{ '/assets/js/filters.js' | relative_url }}"></script>
+  {% endif %}
+</body>
+</html>

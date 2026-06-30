@@ -1,0 +1,49 @@
+{% if demo.status == "active" %}
+  {% assign card_href = demo.url | relative_url %}
+{% else %}
+  {% assign card_href = "#" %}
+{% endif %}
+
+<article
+  class="demo-card{% if featured %} demo-card--featured{% endif %}{% if demo.status != 'active' %} demo-card--soon{% endif %}"
+  data-status="{{ demo.status }}"
+  data-category="{{ demo.category }}"
+  data-tags="{{ demo.tags | join: ',' }}"
+>
+  <a href="{{ card_href }}" class="demo-card__link"{% if demo.status != "active" %} tabindex="-1" aria-disabled="true"{% endif %}>
+    <div class="demo-card__thumb" style="background: {{ demo.thumbnail.gradient }};">
+      <span class="demo-card__icon">{{ demo.thumbnail.icon }}</span>
+      {% if demo.status != "active" %}
+        <span class="demo-card__badge demo-card__badge--soon">Coming soon</span>
+      {% else %}
+        <span class="demo-card__badge demo-card__badge--level">{{ demo.level }}</span>
+      {% endif %}
+    </div>
+    <div class="demo-card__body">
+      <div class="demo-card__meta">
+        <span class="demo-card__category">{{ demo.category | replace: '-', ' ' }}</span>
+        {% if demo.status == "active" %}
+          <span class="demo-card__status demo-card__status--active">Active</span>
+        {% endif %}
+      </div>
+      <h3 class="demo-card__title">{{ demo.title }}</h3>
+      <p class="demo-card__blurb">{{ demo.blurb }}</p>
+      <div class="demo-card__tags">
+        {% for tag in demo.tags %}
+          <span class="tag" data-tag="{{ tag }}">{{ tag }}</span>
+        {% endfor %}
+      </div>
+      <div class="demo-card__stats">
+        {% if demo.stats.workflows > 0 %}
+          <span>{{ demo.stats.workflows }} workflow{% if demo.stats.workflows != 1 %}s{% endif %}</span>
+        {% endif %}
+        {% if demo.stats.playbooks > 0 %}
+          <span>{{ demo.stats.playbooks }} playbooks</span>
+        {% endif %}
+        {% if demo.stats.setup_minutes > 0 %}
+          <span>~{{ demo.stats.setup_minutes }} min setup</span>
+        {% endif %}
+      </div>
+    </div>
+  </a>
+</article>

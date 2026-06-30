@@ -1,0 +1,129 @@
+- slug: disk-utilization-101
+  title: Disk Utilization & Remediation
+  subtitle: Proportional disk response with switch routing
+  category: disk-utilization
+  level: "101"
+  status: active
+  featured: true
+  tags:
+    - Switch
+    - Mattermost
+    - EC2
+  thumbnail:
+    gradient: "linear-gradient(135deg, #1a3a2a 0%, #0d1f17 50%, #1a2a4a 100%)"
+    icon: "💾"
+  blurb: Check disk usage, route by percent full, and remediate proportionally — continue, cleanup logs, expand EBS, or escalate.
+  stats:
+    workflows: 1
+    playbooks: 6
+    setup_minutes: 15
+  url: /demos/disk-utilization-101/
+  github_path: disk-utilization/101-disk-threshold-routing/
+  setup_guide: disk-utilization/101-disk-threshold-routing/README.md
+  workflow_json: disk-utilization/101-disk-threshold-routing/ao/disk-demo-101.json
+
+- slug: cert-rotation-101
+  title: Intelligent Cert Lifecycle
+  subtitle: AI-driven certificate renewal routing
+  category: cert-rotation
+  level: "101"
+  status: active
+  featured: true
+  tags:
+    - AI Agent
+    - Approval
+    - Webhook
+  thumbnail:
+    gradient: "linear-gradient(135deg, #2a1a4a 0%, #1a0d2e 50%, #3a2a1a 100%)"
+    icon: "🔐"
+  blurb: Splunk alert fires, AI agent picks PEM vs keystore renewal template, operator approves, AAP renews and validates TLS.
+  stats:
+    workflows: 2
+    playbooks: 4
+    setup_minutes: 30
+  url: /demos/cert-rotation-101/
+  github_path: cert-rotation/101-cert-lifecycle/
+  setup_guide: cert-rotation/101-cert-lifecycle/SETUP_GUIDE.md
+  workflow_json: cert-rotation/101-cert-lifecycle/ao/cert-demo-101-manual.json
+
+- slug: cert-rotation-201
+  title: Risk-Based Routing
+  subtitle: Risk-tier renewal decisions
+  category: cert-rotation
+  level: "201"
+  status: coming-soon
+  featured: false
+  tags:
+    - AI Agent
+    - Switch
+  thumbnail:
+    gradient: "linear-gradient(135deg, #2a2a3a 0%, #1a1a24 100%)"
+    icon: "⚖️"
+  blurb: Route certificate renewals by AI-assessed risk level — low, medium, and high paths get different treatment.
+  stats:
+    workflows: 0
+    playbooks: 0
+    setup_minutes: 30
+  url: null
+  github_path: cert-rotation/201-risk-based-routing/
+
+- slug: cert-rotation-301
+  title: Proactive Assessment
+  subtitle: Scan before expiry
+  category: cert-rotation
+  level: "301"
+  status: coming-soon
+  featured: false
+  tags:
+    - Scheduled
+    - Monitoring
+  thumbnail:
+    gradient: "linear-gradient(135deg, #1a2a3a 0%, #0d1520 100%)"
+    icon: "📅"
+  blurb: Scheduled proactive scans find expiring certificates before they become incidents.
+  stats:
+    workflows: 0
+    playbooks: 0
+    setup_minutes: 45
+  url: null
+  github_path: cert-rotation/301-proactive-assessment/
+
+- slug: incident-remediation-101
+  title: Service Restart on Alert
+  subtitle: Alert-driven service recovery
+  category: incident-remediation
+  level: "101"
+  status: coming-soon
+  featured: false
+  tags:
+    - Event-Driven
+  thumbnail:
+    gradient: "linear-gradient(135deg, #3a1a1a 0%, #1a0d0d 100%)"
+    icon: "🔄"
+  blurb: Monitoring alert triggers automated service restart and validation.
+  stats:
+    workflows: 0
+    playbooks: 0
+    setup_minutes: 15
+  url: null
+  github_path: incident-remediation/
+
+- slug: incident-remediation-201
+  title: AI Incident Triage
+  subtitle: Intelligent incident response
+  category: incident-remediation
+  level: "201"
+  status: coming-soon
+  featured: false
+  tags:
+    - AI Agent
+  thumbnail:
+    gradient: "linear-gradient(135deg, #2a1a2a 0%, #150d18 100%)"
+    icon: "🤖"
+  blurb: AI agent triages incidents, selects remediation strategy, and routes to the right playbook.
+  stats:
+    workflows: 0
+    playbooks: 0
+    setup_minutes: 30
+  url: null
+  github_path: incident-remediation/

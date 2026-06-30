@@ -1,0 +1,32 @@
+title: AAP Orchestrator Demos
+description: Hands-on Automation Orchestrator demo workflows
+url: https://ansible-tmm.github.io
+baseurl: /aap-orchestrator-demos
+repository: ansible-tmm/aap-orchestrator-demos
+
+markdown: kramdown
+theme: null
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor/
+  - node_modules/
+  - .github/
+  - sean_old_ignore/
+  - cert-rotation/
+  - disk-utilization/
+  - incident-remediation/
+  - collections/
+  - shared/
+  - README.md
+  - DEVELOPER.md
+  - DEMO_LEVELS.md
+  - .gitignore
+  - .cursor/
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
