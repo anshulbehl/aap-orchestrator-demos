@@ -1,6 +1,0 @@
----
-- name: Log healthy service
-  hosts: all
-  gather_facts: false
-  roles:
-    - remediate_log_ok

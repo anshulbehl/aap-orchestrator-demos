@@ -1,6 +1,0 @@
----
-- name: Install missing service
-  hosts: all
-  gather_facts: false
-  roles:
-    - remediate_install_service

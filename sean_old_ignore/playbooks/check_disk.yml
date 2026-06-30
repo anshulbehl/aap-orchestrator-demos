@@ -1,6 +1,0 @@
----
-- name: Check disk utilization
-  hosts: all
-  gather_facts: true
-  roles:
-    - check_disk

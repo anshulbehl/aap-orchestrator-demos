@@ -1,6 +1,0 @@
----
-- name: Cleanup logs — disk usage elevated
-  hosts: all
-  gather_facts: true
-  roles:
-    - remediate_disk_cleanup

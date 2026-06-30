@@ -1,6 +1,0 @@
----
-- name: Recover failed service
-  hosts: all
-  gather_facts: false
-  roles:
-    - remediate_restart_service

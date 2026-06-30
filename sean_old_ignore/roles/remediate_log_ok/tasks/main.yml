@@ -1,4 +1,0 @@
----
-- name: Service is healthy
-  ansible.builtin.debug:
-    msg: "No action needed — {{ service_name }} is active."

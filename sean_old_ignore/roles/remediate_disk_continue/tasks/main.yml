@@ -1,4 +1,0 @@
----
-- name: Disk usage is healthy
-  ansible.builtin.debug:
-    msg: "{{ disk_mount }} at {{ disk_use_percent }}% — no action needed."
