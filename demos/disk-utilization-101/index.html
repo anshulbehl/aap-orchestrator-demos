@@ -7,8 +7,6 @@ mermaid: true
 ---
 
 {% assign demo = site.data.demos | where: "slug", page.demo_slug | first %}
-{% assign repo = site.repository %}
-{% assign gh_base = "https://github.com/" | append: repo | append: "/blob/main/" %}
 
 <a href="{{ '/' | relative_url }}" class="back-link">← All demos</a>
 
@@ -24,9 +22,7 @@ mermaid: true
 </div>
 
 <div class="cta-row">
-  <a href="{{ gh_base }}{{ demo.github_path }}README.md" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
-  <a href="{{ gh_base }}{{ demo.setup_guide }}" class="btn btn-secondary" target="_blank" rel="noopener">Setup guide</a>
-  <a href="{{ gh_base }}{{ demo.workflow_json }}" class="btn btn-secondary" target="_blank" rel="noopener">Import workflow JSON</a>
+  {% include demo-cta.html demo=demo %}
 </div>
 
 <section class="detail-section">

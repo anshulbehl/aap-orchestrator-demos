@@ -3,9 +3,6 @@ layout: default
 ---
 {% assign demo = site.data.demos | where: "slug", page.demo_slug | first %}
 {% assign detail = site.data.demo_pages[page.demo_slug] %}
-{% assign repo = site.repository %}
-{% assign gh_base = "https://github.com/" | append: repo | append: "/blob/main/" %}
-{% assign readme_path = demo.github_path | append: "README.md" %}
 
 <a href="{{ '/' | relative_url }}" class="back-link">← All demos</a>
 
@@ -29,13 +26,7 @@ layout: default
 </div>
 
 <div class="cta-row">
-  <a href="{{ gh_base }}{{ readme_path }}" class="btn btn-primary" target="_blank" rel="noopener">View README on GitHub</a>
-  {% if demo.status == "active" and demo.setup_guide %}
-    <a href="{{ gh_base }}{{ demo.setup_guide }}" class="btn btn-secondary" target="_blank" rel="noopener">Setup guide</a>
-  {% endif %}
-  {% if demo.status == "active" and demo.workflow_json %}
-    <a href="{{ gh_base }}{{ demo.workflow_json }}" class="btn btn-secondary" target="_blank" rel="noopener">Import workflow JSON</a>
-  {% endif %}
+  {% include demo-cta.html demo=demo %}
 </div>
 
 {% if detail.use_case %}

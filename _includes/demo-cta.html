@@ -1,0 +1,15 @@
+{% comment %}
+  Primary GitHub doc link and optional secondary CTAs.
+  Usage: {% include demo-cta.html demo=demo %}
+{% endcomment %}
+{% assign d = include.demo %}
+{% assign gh_base = "https://github.com/" | append: site.repository | append: "/blob/main/" %}
+{% assign github_doc = d.github_doc | default: d.github_path | append: "README.md" %}
+
+<a href="{{ gh_base }}{{ github_doc }}" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
+{% if d.setup_guide and d.setup_guide != github_doc %}
+  <a href="{{ gh_base }}{{ d.setup_guide }}" class="btn btn-secondary" target="_blank" rel="noopener">Setup guide</a>
+{% endif %}
+{% if d.status == "active" and d.workflow_json %}
+  <a href="{{ gh_base }}{{ d.workflow_json }}" class="btn btn-secondary" target="_blank" rel="noopener">Import workflow JSON</a>
+{% endif %}

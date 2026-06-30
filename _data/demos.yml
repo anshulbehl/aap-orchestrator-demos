@@ -21,6 +21,7 @@
     setup_minutes: 15
   url: /demos/disk-utilization-101/
   github_path: disk-utilization/101-disk-threshold-routing/
+  github_doc: disk-utilization/101-disk-threshold-routing/README.md
   setup_guide: disk-utilization/101-disk-threshold-routing/README.md
   workflow_json: disk-utilization/101-disk-threshold-routing/ao/disk-demo-101.json
   workflow_mermaid: |
@@ -58,6 +59,7 @@
     setup_minutes: 30
   url: /demos/cert-rotation-101/
   github_path: cert-rotation/101-cert-lifecycle/
+  github_doc: cert-rotation/101-cert-lifecycle/README.md
   setup_guide: cert-rotation/101-cert-lifecycle/SETUP_GUIDE.md
   workflow_json: cert-rotation/101-cert-lifecycle/ao/cert-demo-101-manual.json
   workflow_mermaid: |
@@ -89,6 +91,7 @@
     setup_minutes: 30
   url: /demos/cert-rotation-201/
   github_path: cert-rotation/201-risk-based-routing/
+  github_doc: cert-rotation/201-risk-based-routing/README.md
   workflow_mermaid: |
     flowchart TD
       A[Cert expiry event] --> B[AI risk assessment]
@@ -123,6 +126,7 @@
     setup_minutes: 45
   url: /demos/cert-rotation-301/
   github_path: cert-rotation/301-proactive-assessment/
+  github_doc: cert-rotation/301-proactive-assessment/README.md
   workflow_mermaid: |
     flowchart TD
       A[Scheduled scan trigger] --> B[Inventory certificate expiry]
@@ -154,6 +158,7 @@
     setup_minutes: 15
   url: /demos/cert-rotation-102/
   github_path: cert-rotation/102-cert-expiry-switch/
+  github_doc: cert-rotation/102-cert-expiry-switch/README.md
   workflow_mermaid: |
     flowchart TD
       A[Manual or schedule] --> B[Check cert expiry]
@@ -186,6 +191,7 @@
     setup_minutes: 15
   url: /demos/service-health-101/
   github_path: service-health/101-service-state-routing/
+  github_doc: service-health/101-service-state-routing/README.md
   workflow_mermaid: |
     flowchart TB
       A[Manual or schedule] --> B[Check service]
@@ -216,6 +222,7 @@
     setup_minutes: 20
   url: /demos/patch-management-101/
   github_path: patch-management/101-patch-severity-routing/
+  github_doc: patch-management/101-patch-severity-routing/README.md
   workflow_mermaid: |
     flowchart TD
       A[Manual or schedule] --> B[Patch assessment]
@@ -247,6 +254,7 @@
     setup_minutes: 20
   url: /demos/user-lifecycle-101/
   github_path: user-lifecycle/101-request-type-routing/
+  github_doc: user-lifecycle/101-request-type-routing/README.md
   workflow_mermaid: |
     flowchart TD
       A[Survey or webhook] --> B{request_type}
@@ -276,6 +284,7 @@
     setup_minutes: 15
   url: /demos/backup-management-101/
   github_path: backup-management/101-backup-result-routing/
+  github_doc: backup-management/101-backup-result-routing/README.md
   workflow_mermaid: |
     flowchart TD
       A[Schedule or event] --> B[Check backup result]
@@ -306,6 +315,7 @@
     setup_minutes: 15
   url: /demos/subscription-management-101/
   github_path: subscription-management/101-rhel-subscription-routing/
+  github_doc: subscription-management/101-rhel-subscription-routing/README.md
   workflow_mermaid: |
     flowchart TD
       A[Schedule] --> B[Check subscription]
@@ -336,6 +346,7 @@
     setup_minutes: 15
   url: /demos/kernel-compliance-101/
   github_path: kernel-compliance/101-kernel-compliance-routing/
+  github_doc: kernel-compliance/101-kernel-compliance-routing/README.md
   workflow_mermaid: |
     flowchart TD
       A[Schedule] --> B[Scan kernel compliance]
@@ -365,6 +376,7 @@
     setup_minutes: 30
   url: /demos/incident-remediation-201/
   github_path: incident-remediation/
+  github_doc: incident-remediation/README.md
   workflow_mermaid: |
     flowchart TD
       A[Incident alert] --> B[AI triage agent]
@@ -394,6 +406,7 @@
     setup_minutes: 45
   url: /demos/incident-remediation-301/
   github_path: incident-remediation/
+  github_doc: incident-remediation/README.md
   workflow_mermaid: |
     flowchart TD
       A[Multiple correlated alerts] --> B[Correlate services]

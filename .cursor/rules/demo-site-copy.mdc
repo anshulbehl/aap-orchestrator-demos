@@ -1,0 +1,33 @@
+---
+description: Consistent UI copy for demo marketplace pages and GitHub links
+globs: "**/*.{html,yml,md}"
+alwaysApply: false
+---
+
+# Demo site copy
+
+Use these exact labels on GitHub Pages demo detail pages and in `_data/demos.yml` comments.
+
+## Primary GitHub CTA
+
+- **Label:** `View on GitHub`
+- **Target:** `github_doc` in `_data/demos.yml` (must be a file that exists in the repo)
+- Do not use "View README on GitHub", "View source", or "View on GitHub repo"
+
+## Secondary CTAs (active demos only)
+
+| Label | When to show |
+|---|---|
+| `Setup guide` | Only when `setup_guide` differs from `github_doc` |
+| `Import workflow JSON` | Active demos with `workflow_json` set |
+
+## Link fields in demos.yml
+
+| Field | Purpose |
+|---|---|
+| `github_doc` | Primary doc linked by "View on GitHub" — verify the file exists |
+| `setup_guide` | Optional setup doc; omit or duplicate `github_doc` if setup IS the README |
+| `workflow_json` | AO import JSON for active demos |
+| `github_path` | Repo folder path for display only (e.g. planned artifacts note) |
+
+Before adding or changing demo links, confirm the target file exists in git.
