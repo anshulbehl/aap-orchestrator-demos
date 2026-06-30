@@ -7,6 +7,8 @@
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
+  --sidebar-width: 240px;
+  --footer-height: 72px;
 }
 
 body {
@@ -109,7 +111,7 @@ a {
 /* Main */
 .main {
   flex: 1;
-  padding: 32px 40px 48px;
+  padding: 32px 40px calc(48px + var(--footer-height));
   max-width: 1200px;
 }
 
@@ -261,12 +263,18 @@ a {
 }
 
 .demo-card--soon {
-  opacity: 0.55;
+  opacity: 0.82;
+}
+
+.demo-card--soon:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  border-color: #333;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
 .demo-card--soon .demo-card__link {
-  cursor: default;
-  pointer-events: none;
+  cursor: pointer;
 }
 
 .demo-card__link {
@@ -533,11 +541,92 @@ a {
   color: #fff;
 }
 
-/* Footer */
+.detail-status {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px;
+}
+
+.detail-status--soon {
+  color: #fbbf24;
+}
+
+.detail-status--active {
+  color: #4ade80;
+}
+
+.detail-one-liner {
+  font-size: 16px;
+  color: #888;
+  margin: 0 0 16px;
+  max-width: 680px;
+}
+
+.detail-list {
+  color: #aaa;
+  max-width: 680px;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+
+.detail-list li {
+  margin-bottom: 6px;
+}
+
+.detail-table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.detail-table {
+  width: 100%;
+  max-width: 720px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.detail-table th,
+.detail-table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid #222;
+}
+
+.detail-table th {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #666;
+  background: #111;
+}
+
+.detail-table td {
+  color: #bbb;
+}
+
+.detail-table code {
+  font-size: 12px;
+  background: #1a1a1a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #ddd;
+}
+
+/* Footer — fixed to viewport bottom, beside sidebar */
 .site-footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  z-index: 50;
   border-top: 1px solid #1f1f1f;
-  background: #0a0a0a;
-  padding: 20px 40px;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 16px 40px;
 }
 
 .site-footer__inner {
@@ -604,11 +693,12 @@ a {
   }
 
   .main {
-    padding: 24px 20px 32px;
+    padding: 24px 20px calc(32px + var(--footer-height));
   }
 
   .site-footer {
-    padding: 20px;
+    left: 0;
+    padding: 16px 20px;
   }
 
   .card-grid--featured {

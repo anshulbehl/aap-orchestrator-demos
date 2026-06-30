@@ -1,0 +1,129 @@
+cert-rotation-201:
+  use_case: This demo extends Intelligent Cert Lifecycle 101 with AI-assessed risk scoring per certificate. A switch routes low, medium, and high risk renewals to different approval and execution paths.
+  bullets:
+    - Risk scoring per certificate (low/medium/high)
+    - Switch-node routing to different approval flows per risk level
+    - Blast radius analysis
+    - Multiple hosts with different cert types
+  routes:
+    headers: [Risk tier, Action]
+    rows:
+      - [Low, Auto-renew]
+      - [Medium, Notify + renew]
+      - [High, Approval required]
+
+cert-rotation-301:
+  use_case: Scheduled proactive scans inventory the full certificate estate and renew or escalate before expiry becomes an incident. Extends the risk-based 201 pattern with estate-wide coverage and compliance reporting.
+  bullets:
+    - Scheduled scanning of the full certificate estate
+    - AI classification across all discovered certs
+    - Auto-remediation for low-risk certs
+    - Escalation for critical certs
+    - Compliance reporting
+  routes:
+    headers: [Condition, Action]
+    rows:
+      - [Expires within window, Renew proactively]
+      - [No expiry risk, Log OK — no action]
+
+cert-rotation-102:
+  use_case: Rule-based certificate expiry handling — distinct from Intelligent Cert Lifecycle 101 which uses an AI agent to pick renewal templates. This demo switches on cert_status from days remaining with no LLM required.
+  one_liner: Expiry isn't pass/fail — it's a countdown.
+  routes:
+    headers: [cert_status, Days remaining, Action]
+    rows:
+      - [healthy, "> 60", "Skip — no action"]
+      - [plan, "30–60", Open change request]
+      - [renew, "7–30", Run renewal playbook]
+      - [emergency, "< 7", "Renew + alert + verify chain"]
+  related_table:
+    heading: Relationship to other cert demos
+    headers: [Demo, Approach]
+    rows:
+      - ["101 Intelligent Cert Lifecycle", "AI agent selects PEM vs keystore renewal (active)"]
+      - ["102 Expiry Threshold Routing", "Rule-based switch on days remaining"]
+      - ["201 Risk-Based Routing", "AI-assessed risk tier"]
+      - ["301 Proactive Assessment", Scheduled estate-wide scan]
+
+service-health-101:
+  use_case: One host, one service (httpd). Run a check playbook that publishes service_state. Route remediation in a single switch — no nested Controller decision trees.
+  routes:
+    headers: [service_state, Path, Planned action]
+    rows:
+      - [active, "Green — done", "Log OK, no changes"]
+      - [inactive, "Yellow — start it", Start the service]
+      - [failed, "Orange — recover", Inspect logs and restart]
+      - [not-found, "Red — install", Install the package and enable the unit]
+  why_heading: Why not binary branching?
+  why: The same four outcomes in a Controller-style workflow require nested success/failure nodes that still guess at failure meaning. The switch reads one artifact and routes by meaning.
+  demo_ideas:
+    - Stop httpd → workflow routes to inactive → start path
+    - "dnf remove httpd → workflow routes to not-found → install path"
+
+patch-management-101:
+  use_case: Run a patch assessment playbook that publishes highest_severity from dnf updateinfo or an Insights scan. Switch on the value and route to the response that matches your change policy.
+  one_liner: One scan job. Four remediation strategies.
+  routes:
+    headers: [highest_severity, Action]
+    rows:
+      - [critical, "Patch now + open maintenance window"]
+      - [important, Schedule change window]
+      - [moderate, Add to weekly batch]
+      - [none, "Report compliant, exit"]
+
+user-lifecycle-101:
+  use_case: Switch on request_type from an automation orchestrator survey, webhook, or ticket integration. Each value triggers a purpose-built automation path.
+  one_liner: One form. Four completely different runbooks.
+  routes:
+    headers: [request_type, Action]
+    rows:
+      - [new_hire, "Create user, SSH key, sudo, groups"]
+      - [contractor, "Create user, expiry date, limited sudo"]
+      - [role_change, Update groups and sudo only]
+      - [termination, "Lock account, archive home, revoke keys"]
+  why: Switch routing is not only for technical metrics — human input maps cleanly to string values.
+
+backup-management-101:
+  use_case: Backup jobs often return outcomes that binary workflows mishandle. Switch on backup_result — partial success is neither pass nor fail.
+  routes:
+    headers: [backup_result, Action]
+    rows:
+      - [success, Verify restore point, log OK]
+      - [partial, Retry failed targets, notify ops]
+      - [failed, Escalate, open incident]
+      - [skipped, Log reason, check schedule]
+
+subscription-management-101:
+  use_case: Switch on RHEL subscription state after a compliance check. Registration status drives the remediation path — not whether the Ansible job turned green.
+  routes:
+    headers: [subscription_status, Action]
+    rows:
+      - [registered, Log compliant]
+      - [expiring, Notify + schedule renewal]
+      - [expired, Register or attach subscription]
+      - [unregistered, Register with activation key]
+
+kernel-compliance-101:
+  use_case: Kernel compliance scans produce states that need different operational responses. Reboot required is not the same as drift or end-of-life.
+  routes:
+    headers: [kernel_compliance, Action]
+    rows:
+      - [compliant, Log OK]
+      - [reboot_required, Schedule maintenance reboot]
+      - [drift, Apply kernel update playbook]
+      - [eol, Flag for migration planning]
+
+incident-remediation-201:
+  use_case: When an incident alert fires, an AI agent analyzes context, selects a remediation strategy, and routes to the appropriate AAP playbook — without hardcoded if-statements in the workflow.
+  bullets:
+    - AI agent triages incident payload
+    - Dynamic playbook selection at runtime
+    - Post-remediation validation and operator notification
+
+incident-remediation-301:
+  use_case: Multiple correlated alerts arrive across services. The workflow correlates them, identifies root cause when possible, and routes to targeted remediation or AI-assisted triage when not.
+  bullets:
+    - Multi-alert correlation across services
+    - Root-cause-first remediation when identified
+    - Fallback to AI triage agent
+    - Validation and operator notification

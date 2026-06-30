@@ -87,7 +87,7 @@
     workflows: 0
     playbooks: 0
     setup_minutes: 30
-  url: null
+  url: /demos/cert-rotation-201/
   github_path: cert-rotation/201-risk-based-routing/
   workflow_mermaid: |
     flowchart TD
@@ -121,7 +121,7 @@
     workflows: 0
     playbooks: 0
     setup_minutes: 45
-  url: null
+  url: /demos/cert-rotation-301/
   github_path: cert-rotation/301-proactive-assessment/
   workflow_mermaid: |
     flowchart TD
@@ -152,7 +152,7 @@
     workflows: 0
     playbooks: 0
     setup_minutes: 15
-  url: null
+  url: /demos/cert-rotation-102/
   github_path: cert-rotation/102-cert-expiry-switch/
   workflow_mermaid: |
     flowchart TD
@@ -184,7 +184,7 @@
     workflows: 0
     playbooks: 0
     setup_minutes: 15
-  url: null
+  url: /demos/service-health-101/
   github_path: service-health/101-service-state-routing/
   workflow_mermaid: |
     flowchart TB
@@ -214,7 +214,7 @@
     workflows: 0
     playbooks: 0
     setup_minutes: 20
-  url: null
+  url: /demos/patch-management-101/
   github_path: patch-management/101-patch-severity-routing/
   workflow_mermaid: |
     flowchart TD
@@ -245,7 +245,7 @@
     workflows: 0
     playbooks: 0
     setup_minutes: 20
-  url: null
+  url: /demos/user-lifecycle-101/
   github_path: user-lifecycle/101-request-type-routing/
   workflow_mermaid: |
     flowchart TD
@@ -274,7 +274,7 @@
     workflows: 0
     playbooks: 0
     setup_minutes: 15
-  url: null
+  url: /demos/backup-management-101/
   github_path: backup-management/101-backup-result-routing/
   workflow_mermaid: |
     flowchart TD
@@ -304,7 +304,7 @@
     workflows: 0
     playbooks: 0
     setup_minutes: 15
-  url: null
+  url: /demos/subscription-management-101/
   github_path: subscription-management/101-rhel-subscription-routing/
   workflow_mermaid: |
     flowchart TD
@@ -334,7 +334,7 @@
     workflows: 0
     playbooks: 0
     setup_minutes: 15
-  url: null
+  url: /demos/kernel-compliance-101/
   github_path: kernel-compliance/101-kernel-compliance-routing/
   workflow_mermaid: |
     flowchart TD
@@ -363,7 +363,7 @@
     workflows: 0
     playbooks: 0
     setup_minutes: 30
-  url: null
+  url: /demos/incident-remediation-201/
   github_path: incident-remediation/
   workflow_mermaid: |
     flowchart TD
@@ -392,7 +392,7 @@
     workflows: 0
     playbooks: 0
     setup_minutes: 45
-  url: null
+  url: /demos/incident-remediation-301/
   github_path: incident-remediation/
   workflow_mermaid: |
     flowchart TD

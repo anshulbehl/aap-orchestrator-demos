@@ -1,0 +1,141 @@
+---
+layout: default
+---
+{% assign demo = site.data.demos | where: "slug", page.demo_slug | first %}
+{% assign detail = site.data.demo_pages[page.demo_slug] %}
+{% assign repo = site.repository %}
+{% assign gh_base = "https://github.com/" | append: repo | append: "/blob/main/" %}
+{% assign readme_path = demo.github_path | append: "README.md" %}
+
+<a href="{{ '/' | relative_url }}" class="back-link">← All demos</a>
+
+<div class="detail-hero">
+  {% if demo.status == "coming-soon" %}
+    <p class="detail-status detail-status--soon">Coming soon — scaffold only</p>
+  {% else %}
+    <p class="detail-status detail-status--active">Active</p>
+  {% endif %}
+  <h1>{{ demo.title }}</h1>
+  <p class="subtitle">{{ demo.subtitle }}</p>
+  {% if detail.one_liner %}
+    <p class="detail-one-liner"><em>{{ detail.one_liner }}</em></p>
+  {% endif %}
+  <div class="detail-tags">
+    <span class="tag">Level {{ demo.level }}</span>
+    {% for tag in demo.tags %}
+      <span class="tag">{{ tag }}</span>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="cta-row">
+  <a href="{{ gh_base }}{{ readme_path }}" class="btn btn-primary" target="_blank" rel="noopener">View README on GitHub</a>
+  {% if demo.status == "active" and demo.setup_guide %}
+    <a href="{{ gh_base }}{{ demo.setup_guide }}" class="btn btn-secondary" target="_blank" rel="noopener">Setup guide</a>
+  {% endif %}
+  {% if demo.status == "active" and demo.workflow_json %}
+    <a href="{{ gh_base }}{{ demo.workflow_json }}" class="btn btn-secondary" target="_blank" rel="noopener">Import workflow JSON</a>
+  {% endif %}
+</div>
+
+{% if detail.use_case %}
+<section class="detail-section">
+  <h2>What this demo shows</h2>
+  <p>{{ detail.use_case }}</p>
+</section>
+{% endif %}
+
+{% if detail.bullets %}
+<section class="detail-section">
+  <h2>Planned scope</h2>
+  <ul class="detail-list">
+    {% for item in detail.bullets %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if detail.routes %}
+<section class="detail-section">
+  <h2>Switch routing</h2>
+  <div class="detail-table-wrap">
+    <table class="detail-table">
+      <thead>
+        <tr>
+          {% for header in detail.routes.headers %}
+            <th>{{ header }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in detail.routes.rows %}
+          <tr>
+            {% for cell in row %}
+              <td>{% if forloop.first %}<code>{{ cell }}</code>{% else %}{{ cell }}{% endif %}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if detail.related_table %}
+<section class="detail-section">
+  <h2>{{ detail.related_table.heading }}</h2>
+  <div class="detail-table-wrap">
+    <table class="detail-table">
+      <thead>
+        <tr>
+          {% for header in detail.related_table.headers %}
+            <th>{{ header }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in detail.related_table.rows %}
+          <tr>
+            {% for cell in row %}
+              <td>{{ cell }}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if demo.workflow_mermaid %}
+<section class="detail-section">
+  <h2>Workflow</h2>
+  {% include workflow-diagram.html mermaid=demo.workflow_mermaid %}
+</section>
+{% endif %}
+
+{% if detail.why %}
+<section class="detail-section">
+  <h2>{{ detail.why_heading | default: "Why a switch?" }}</h2>
+  <p>{{ detail.why }}</p>
+</section>
+{% endif %}
+
+{% if detail.demo_ideas %}
+<section class="detail-section">
+  <h2>Demo ideas</h2>
+  <ul class="detail-list">
+    {% for item in detail.demo_ideas %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if demo.status == "coming-soon" %}
+<section class="detail-section">
+  <h2>Planned artifacts</h2>
+  <p>When built, this demo will include automation orchestrator workflow JSON and AAP playbooks under <code>{{ demo.github_path }}</code>. Playbooks and AO exports are not created yet.</p>
+</section>
+{% endif %}

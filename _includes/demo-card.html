@@ -1,5 +1,7 @@
 {% if demo.status == "active" %}
   {% assign card_href = demo.url | relative_url %}
+{% elsif demo.url %}
+  {% assign card_href = demo.url | relative_url %}
 {% else %}
   {% assign card_href = "#" %}
 {% endif %}
@@ -12,7 +14,7 @@
   data-uses-ai="{{ demo.uses_ai }}"
   data-search="{{ demo.title | downcase }} {{ demo.subtitle | downcase }} {{ demo.blurb | downcase }} {{ demo.category | replace: '-', ' ' | downcase }} {{ demo.tags | join: ' ' | downcase }}"
 >
-  <a href="{{ card_href }}" class="demo-card__link"{% if demo.status != "active" %} tabindex="-1" aria-disabled="true"{% endif %}>
+  <a href="{{ card_href }}" class="demo-card__link">
     <div class="demo-card__thumb" style="background: {{ demo.thumbnail.gradient }};">
       <span class="demo-card__icon">{{ demo.thumbnail.icon }}</span>
       {% if demo.status != "active" %}
