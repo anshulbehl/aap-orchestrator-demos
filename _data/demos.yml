@@ -27,17 +27,17 @@
   workflow_mermaid: |
     flowchart LR
       A@{ img: "__ASSET__/assets/icons/manual-trigger.png", label: "Manual trigger", pos: "b", h: 96, constraint: "on" } --> B@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Disk Utilization Check", pos: "b", h: 96, constraint: "on" }
-      B --> C{Switch on disk_use_percent}
-      C -->|"< 80%"| D[Continue]
-      C -->|"80–95%"| E[Cleanup logs & cache]
-      C -->|"> 95%"| F[Expand EBS volume]
-      C -->|default| G[Fallback — manual review]
-      D --> H[Notify — OK]
-      E --> I[Notify — Warning]
-      F --> J[Notify — Critical]
-      G --> K[Notify — Unsupported]
-      style A fill:transparent,stroke:transparent
-      style B fill:transparent,stroke:transparent
+      B --> C@{ img: "__ASSET__/assets/icons/switch-node.png", label: "Switch on disk_use_percent", pos: "b", h: 96, constraint: "on" }
+      C -->|"< 80%"| D@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Continue", pos: "b", h: 96, constraint: "on" }
+      C -->|"80–95%"| E@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Cleanup logs & cache", pos: "b", h: 96, constraint: "on" }
+      C -->|"> 95%"| F@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Expand EBS volume", pos: "b", h: 96, constraint: "on" }
+      C -->|default| G@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Fallback — manual review", pos: "b", h: 96, constraint: "on" }
+      D --> H@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Notify — OK", pos: "b", h: 96, constraint: "on" }
+      E --> I@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Notify — Warning", pos: "b", h: 96, constraint: "on" }
+      F --> J@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Notify — Critical", pos: "b", h: 96, constraint: "on" }
+      G --> K@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Notify — Unsupported", pos: "b", h: 96, constraint: "on" }
+      classDef noBorder fill:transparent,stroke:transparent
+      class A,B,C,D,E,F,G,H,I,J,K noBorder
 
 - slug: disk-utilization-101
   title: Disk Utilization & Remediation
