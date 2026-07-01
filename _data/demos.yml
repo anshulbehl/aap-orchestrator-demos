@@ -26,7 +26,7 @@
   workflow_json: sean-test/101-disk-threshold-routing/ao/disk-demo-101.json
   workflow_mermaid: |
     flowchart TD
-      A[Manual trigger] --> B@{ img: "__ASSET__/icons/launch-aap-job-template.png", label: "Disk Utilization Check", pos: "b", h: 96, constraint: "on" }
+      A[Manual trigger] --> B@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Disk Utilization Check", pos: "b", h: 96, constraint: "on" }
       B --> C{Switch on disk_use_percent}
       C -->|"< 80%"| D[Continue]
       C -->|"80–95%"| E[Cleanup logs & cache]
