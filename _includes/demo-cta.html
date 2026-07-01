@@ -4,7 +4,11 @@
 {% endcomment %}
 {% assign d = include.demo %}
 {% assign gh_base = "https://github.com/" | append: site.repository | append: "/blob/main/" %}
-{% assign github_doc = d.github_doc | default: d.github_path | append: "README.md" %}
+{% if d.github_doc %}
+  {% assign github_doc = d.github_doc %}
+{% else %}
+  {% assign github_doc = d.github_path | append: "README.md" %}
+{% endif %}
 
 <a href="{{ gh_base }}{{ github_doc }}" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
 {% if d.setup_guide and d.setup_guide != github_doc %}
