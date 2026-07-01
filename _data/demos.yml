@@ -36,6 +36,7 @@
       E --> I[Notify — Warning]
       F --> J[Notify — Critical]
       G --> K[Notify — Unsupported]
+      style B fill:transparent,stroke:transparent
 
 - slug: disk-utilization-101
   title: Disk Utilization & Remediation

@@ -466,6 +466,12 @@ a {
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Mermaid draws a rect wrapper around image nodes — hide it so PNG cards sit flush */
+.workflow-diagram .mermaid svg .node:has(image) > rect {
+  fill: none !important;
+  stroke: none !important;
+}
+
 .cta-row {
   display: flex;
   flex-wrap: wrap;
