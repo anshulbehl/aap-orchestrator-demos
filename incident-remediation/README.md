@@ -14,7 +14,7 @@ Coming soon. Demos showing automation orchestrator handling multi-step IT incide
 ## Workflow (201 — coming soon)
 
 ```mermaid
-flowchart TD
+flowchart LR
   A[Incident alert] --> B[AI triage agent]
   B --> C[Select remediation strategy]
   C --> D[Run playbook]
@@ -29,7 +29,7 @@ flowchart TD
 ## Workflow (301 — coming soon)
 
 ```mermaid
-flowchart TD
+flowchart LR
   A[Multiple correlated alerts] --> B[Correlate services]
   B --> C{Root cause identified?}
   C -->|Yes| D[Targeted remediation]

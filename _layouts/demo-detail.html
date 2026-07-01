@@ -23,6 +23,7 @@ layout: default
       <span class="tag">{{ tag }}</span>
     {% endfor %}
   </div>
+  <hr class="detail-divider">
 </div>
 
 <div class="cta-row">
@@ -31,10 +32,12 @@ layout: default
 
 {% if detail.use_case %}
 <section class="detail-section">
-  <h2>What this demo shows</h2>
+  <h2>Description</h2>
   <p>{{ detail.use_case }}</p>
 </section>
 {% endif %}
+
+{% include demo-interactive.html demo=demo %}
 
 {% if detail.bullets %}
 <section class="detail-section">

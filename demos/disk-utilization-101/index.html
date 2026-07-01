@@ -19,6 +19,7 @@ mermaid: true
       <span class="tag">{{ tag }}</span>
     {% endfor %}
   </div>
+  <hr class="detail-divider">
 </div>
 
 <div class="cta-row">
@@ -26,13 +27,15 @@ mermaid: true
 </div>
 
 <section class="detail-section">
-  <h2>The use case</h2>
+  <h2>Description</h2>
   <p>
     Servers run out of disk space at different urgency levels. At 72% you do nothing. At 85% you reclaim
     cache and old logs before it hurts. At 97% you add capacity — on EC2, expand the EBS volume, grow the
     partition, and extend XFS. Each path posts a tier-specific Mattermost message so the team knows what ran.
   </p>
 </section>
+
+{% include demo-interactive.html demo=demo %}
 
 <section class="detail-section">
   <h2>Workflow</h2>

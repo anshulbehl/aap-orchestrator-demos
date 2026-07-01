@@ -16,7 +16,7 @@ Switch on RHEL subscription state after a compliance check:
 ## Workflow
 
 ```mermaid
-flowchart TD
+flowchart LR
   Trigger[Schedule] --> Check[JT: check_subscription]
   Check --> Switch{subscription_status}
   Switch -->|registered| OK[JT: log_compliant]

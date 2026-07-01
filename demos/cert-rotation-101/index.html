@@ -19,6 +19,7 @@ mermaid: true
       <span class="tag">{{ tag }}</span>
     {% endfor %}
   </div>
+  <hr class="detail-divider">
 </div>
 
 <div class="cta-row">
@@ -26,7 +27,7 @@ mermaid: true
 </div>
 
 <section class="detail-section">
-  <h2>The use case</h2>
+  <h2>Description</h2>
   <p>
     Two certificates expire on production services at the same time. Splunk fires alerts to automation orchestrator.
     An AI agent analyzes each certificate, discovers available AAP job templates, and selects the correct renewal
@@ -34,6 +35,8 @@ mermaid: true
     the agent's analysis and confidence score, approves, and AAP renews and validates TLS automatically.
   </p>
 </section>
+
+{% include demo-interactive.html demo=demo %}
 
 <section class="detail-section">
   <h2>Workflow</h2>

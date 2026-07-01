@@ -9,7 +9,7 @@ Two certificates expire on production services at the same time. Splunk fires al
 ## Workflow
 
 ```mermaid
-flowchart TD
+flowchart LR
   A[Splunk alert — cert expired] --> B[AO webhook trigger]
   B --> C[Plan renewal — AI agent]
   C --> D[Approve renewal — operator]

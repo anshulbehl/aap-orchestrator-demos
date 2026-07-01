@@ -30,7 +30,7 @@ The check playbook publishes `disk_use_percent` and `disk_tier` via `set_stats`.
 ## Workflow
 
 ```mermaid
-flowchart TD
+flowchart LR
   A[Manual trigger] --> B[Disk Utilization Check — JT 115]
   B --> C{Switch on disk_use_percent}
   C -->|"< 80%"| D[Continue — JT 118]

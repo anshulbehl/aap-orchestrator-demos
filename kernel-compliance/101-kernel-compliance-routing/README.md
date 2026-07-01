@@ -16,7 +16,7 @@ Switch on kernel compliance state from a scan playbook:
 ## Workflow
 
 ```mermaid
-flowchart TD
+flowchart LR
   Trigger[Schedule] --> Scan[JT: scan_kernel_compliance]
   Scan --> Switch{kernel_compliance}
   Switch -->|compliant| OK[JT: log_compliant]

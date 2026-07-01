@@ -30,7 +30,7 @@ Classic AAP workflows branch on success or failure. Disk utilization isn't pass/
 ## Architecture (101)
 
 ```mermaid
-flowchart TD
+flowchart LR
   A[Check disk usage] --> B{Switch on disk_use_percent}
   B -->|"< 80%"| C[Continue]
   B -->|"80–95%"| D[Cleanup]

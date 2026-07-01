@@ -16,7 +16,7 @@ Backup jobs often return outcomes that binary workflows mishandle. Switch on `ba
 ## Workflow
 
 ```mermaid
-flowchart TD
+flowchart LR
   Trigger[Schedule or event] --> Check[JT: check_backup_result]
   Check --> Switch{backup_result}
   Switch -->|success| Verify[JT: verify_backup]

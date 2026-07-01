@@ -16,7 +16,7 @@ Run a patch assessment playbook that publishes `highest_severity` from `dnf upda
 ## Workflow
 
 ```mermaid
-flowchart TD
+flowchart LR
   Trigger[Manual or schedule] --> Scan[JT: patch_assessment]
   Scan --> Switch{highest_severity}
   Switch -->|critical| PatchNow[JT: patch_now]

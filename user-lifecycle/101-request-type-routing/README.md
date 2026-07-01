@@ -18,7 +18,7 @@ Switch routing is not only for technical metrics — human input maps cleanly to
 ## Workflow
 
 ```mermaid
-flowchart TD
+flowchart LR
   Trigger[Survey or webhook] --> Switch{request_type}
   Switch -->|new_hire| Hire[JT: provision_new_hire]
   Switch -->|contractor| Contractor[JT: provision_contractor]

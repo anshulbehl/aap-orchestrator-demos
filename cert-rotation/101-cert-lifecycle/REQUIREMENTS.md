@@ -7,7 +7,7 @@ A monitoring alert fires for an expired nginx TLS certificate. Automation orches
 ## Workflow
 
 ```mermaid
-flowchart TD
+flowchart LR
   A[Splunk alert — cert expired] --> B[AO webhook trigger]
   B --> C[Plan renewal — AI agent]
   C --> D[Approve renewal — operator]

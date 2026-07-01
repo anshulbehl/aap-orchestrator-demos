@@ -16,7 +16,7 @@ One host, one service (`httpd`). Run a check playbook that publishes `service_st
 ## Workflow
 
 ```mermaid
-flowchart TB
+flowchart LR
   Trigger[Manual or schedule] --> CheckJT[JT: check_service]
   CheckJT --> Switch{service_state}
   Switch -->|active| Done[JT: remediate_log_ok]

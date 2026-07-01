@@ -103,6 +103,8 @@
   github_doc: cert-rotation/101-cert-lifecycle/README.md
   setup_guide: cert-rotation/101-cert-lifecycle/SETUP_GUIDE.md
   workflow_json: cert-rotation/101-cert-lifecycle/ao/cert-demo-101-manual.json
+  arcade_embed: https://demo.arcade.software/xHT8OvDhtCYBSpZfSri2?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true
+  arcade_title: Intelligent certificate renewal with Automation Orchestrator
   workflow_mermaid: |
     flowchart LR
       A[Splunk alert — cert expired] --> B[AO webhook trigger]

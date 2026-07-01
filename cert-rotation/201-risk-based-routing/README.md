@@ -10,7 +10,7 @@ Coming soon. This demo extends 101 with:
 ## Workflow
 
 ```mermaid
-flowchart TD
+flowchart LR
   A[Cert expiry event] --> B[AI risk assessment]
   B --> C{Risk tier}
   C -->|Low| D[Auto-renew]

@@ -11,7 +11,7 @@ Coming soon. This demo extends 201 with:
 ## Workflow
 
 ```mermaid
-flowchart TD
+flowchart LR
   A[Scheduled scan trigger] --> B[Inventory certificate expiry]
   B --> C{Expires within window?}
   C -->|Yes| D[Renew proactively]

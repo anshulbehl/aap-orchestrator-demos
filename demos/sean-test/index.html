@@ -19,6 +19,7 @@ mermaid: true
       <span class="tag">{{ tag }}</span>
     {% endfor %}
   </div>
+  <hr class="detail-divider">
 </div>
 
 <div class="cta-row">
@@ -26,13 +27,15 @@ mermaid: true
 </div>
 
 <section class="detail-section">
-  <h2>The use case</h2>
+  <h2>Description</h2>
   <p>
     Sandbox copy of disk utilization for testing custom Mermaid diagram assets. The workflow diagram uses
     an AAP job template PNG on the check node instead of a plain text box — all playbooks and AO JSON
     are identical to the disk utilization 101 demo.
   </p>
 </section>
+
+{% include demo-interactive.html demo=demo %}
 
 <section class="detail-section">
   <h2>Workflow</h2>

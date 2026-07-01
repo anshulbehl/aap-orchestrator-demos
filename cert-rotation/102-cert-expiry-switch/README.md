@@ -18,7 +18,7 @@ Rule-based certificate expiry handling — distinct from [101 Intelligent Cert L
 ## Workflow
 
 ```mermaid
-flowchart TD
+flowchart LR
   Trigger[Manual or schedule] --> Check[JT: check_cert_expiry]
   Check --> Switch{cert_status}
   Switch -->|healthy| Skip[JT: log_ok]

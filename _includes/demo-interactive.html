@@ -1,0 +1,28 @@
+{% comment %}
+  Arcade embed or same-size coming-soon placeholder.
+  Usage: {% include demo-interactive.html demo=demo %}
+{% endcomment %}
+{% assign d = include.demo %}
+
+<section class="detail-section">
+  <h2>Interactive Experience</h2>
+  <div class="arcade-embed{% unless d.arcade_embed %} arcade-embed--placeholder{% endunless %}">
+    <div class="arcade-embed__frame">
+      {% if d.arcade_embed %}
+        <iframe
+          src="{{ d.arcade_embed }}"
+          title="{{ d.arcade_title | default: d.title }}"
+          frameborder="0"
+          loading="lazy"
+          webkitallowfullscreen
+          mozallowfullscreen
+          allowfullscreen
+          allow="clipboard-write"
+          style="color-scheme: light;"
+        ></iframe>
+      {% else %}
+        <div class="arcade-embed__coming-soon">Coming soon</div>
+      {% endif %}
+    </div>
+  </div>
+</section>
