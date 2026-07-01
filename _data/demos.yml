@@ -26,18 +26,18 @@
   workflow_json: sean-test/101-disk-threshold-routing/ao/disk-demo-101.json
   workflow_mermaid: |
     flowchart LR
-      A@{ img: "__ASSET__/assets/icons/manual-trigger.png", label: "Manual trigger", pos: "b", h: 96, constraint: "on" } --> B@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Disk Utilization Check", pos: "b", h: 96, constraint: "on" }
+      A@{ img: "__ASSET__/assets/icons/manual-trigger.png", label: "Manual trigger", pos: "b", h: 96, constraint: "on" } --> B@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Disk Utilization Check — JT 115", pos: "b", h: 96, constraint: "on" }
       B --> C@{ img: "__ASSET__/assets/icons/switch-node.png", label: "Switch on disk_use_percent", pos: "b", h: 96, constraint: "on" }
-      C -->|"< 80%"| D@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Continue", pos: "b", h: 96, constraint: "on" }
-      C -->|"80–95%"| E@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Cleanup logs & cache", pos: "b", h: 96, constraint: "on" }
-      C -->|"> 95%"| F@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Expand EBS volume", pos: "b", h: 96, constraint: "on" }
-      C -->|Fallback| G@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Fallback — manual review", pos: "b", h: 96, constraint: "on" }
-      D --> H@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Notify — OK", pos: "b", h: 96, constraint: "on" }
-      E --> I@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Notify — Warning", pos: "b", h: 96, constraint: "on" }
-      F --> J@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Notify — Critical", pos: "b", h: 96, constraint: "on" }
-      G --> K@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Notify — Unsupported", pos: "b", h: 96, constraint: "on" }
+      C -->|"< 80%"| D@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Continue — JT 118", pos: "b", h: 96, constraint: "on" }
+      C -->|"80–95%"| E@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Cleanup — JT 116", pos: "b", h: 96, constraint: "on" }
+      C -->|"> 95%"| F@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Expand — JT 119", pos: "b", h: 96, constraint: "on" }
+      C -->|default| G@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Fallback — JT 120", pos: "b", h: 96, constraint: "on" }
+      D --> H@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Notify — JT 117", pos: "b", h: 96, constraint: "on" }
+      E --> H
+      F --> H
+      G --> H
       classDef noBorder fill:transparent,stroke:transparent
-      class A,B,C,D,E,F,G,H,I,J,K noBorder
+      class A,B,C,D,E,F,G,H noBorder
 
 - slug: disk-utilization-101
   title: Disk Utilization & Remediation
@@ -66,7 +66,7 @@
   setup_guide: disk-utilization/101-disk-threshold-routing/README.md
   workflow_json: disk-utilization/101-disk-threshold-routing/ao/disk-demo-101.json
   workflow_mermaid: |
-    flowchart TD
+    flowchart LR
       A[Manual trigger] --> B[Disk Utilization Check]
       B --> C{Switch on disk_use_percent}
       C -->|"< 80%"| D[Continue]
@@ -104,7 +104,7 @@
   setup_guide: cert-rotation/101-cert-lifecycle/SETUP_GUIDE.md
   workflow_json: cert-rotation/101-cert-lifecycle/ao/cert-demo-101-manual.json
   workflow_mermaid: |
-    flowchart TD
+    flowchart LR
       A[Splunk alert — cert expired] --> B[AO webhook trigger]
       B --> C[Plan renewal — AI agent]
       C --> D[Approve renewal — operator]
@@ -134,7 +134,7 @@
   github_path: cert-rotation/201-risk-based-routing/
   github_doc: cert-rotation/201-risk-based-routing/README.md
   workflow_mermaid: |
-    flowchart TD
+    flowchart LR
       A[Cert expiry event] --> B[AI risk assessment]
       B --> C{Risk tier}
       C -->|Low| D[Auto-renew]
@@ -169,7 +169,7 @@
   github_path: cert-rotation/301-proactive-assessment/
   github_doc: cert-rotation/301-proactive-assessment/README.md
   workflow_mermaid: |
-    flowchart TD
+    flowchart LR
       A[Scheduled scan trigger] --> B[Inventory certificate expiry]
       B --> C{Expires within window?}
       C -->|Yes| D[Renew proactively]
@@ -201,7 +201,7 @@
   github_path: cert-rotation/102-cert-expiry-switch/
   github_doc: cert-rotation/102-cert-expiry-switch/README.md
   workflow_mermaid: |
-    flowchart TD
+    flowchart LR
       A[Manual or schedule] --> B[Check cert expiry]
       B --> C{cert_status}
       C -->|healthy| D[Log OK]
@@ -234,7 +234,7 @@
   github_path: service-health/101-service-state-routing/
   github_doc: service-health/101-service-state-routing/README.md
   workflow_mermaid: |
-    flowchart TB
+    flowchart LR
       A[Manual or schedule] --> B[Check service]
       B --> C{service_state}
       C -->|active| D[Log OK]
@@ -265,7 +265,7 @@
   github_path: patch-management/101-patch-severity-routing/
   github_doc: patch-management/101-patch-severity-routing/README.md
   workflow_mermaid: |
-    flowchart TD
+    flowchart LR
       A[Manual or schedule] --> B[Patch assessment]
       B --> C{highest_severity}
       C -->|critical| D[Patch now]
@@ -297,7 +297,7 @@
   github_path: user-lifecycle/101-request-type-routing/
   github_doc: user-lifecycle/101-request-type-routing/README.md
   workflow_mermaid: |
-    flowchart TD
+    flowchart LR
       A[Survey or webhook] --> B{request_type}
       B -->|new_hire| C[Provision new hire]
       B -->|contractor| D[Provision contractor]
@@ -327,7 +327,7 @@
   github_path: backup-management/101-backup-result-routing/
   github_doc: backup-management/101-backup-result-routing/README.md
   workflow_mermaid: |
-    flowchart TD
+    flowchart LR
       A[Schedule or event] --> B[Check backup result]
       B --> C{backup_result}
       C -->|success| D[Verify backup]
@@ -358,7 +358,7 @@
   github_path: subscription-management/101-rhel-subscription-routing/
   github_doc: subscription-management/101-rhel-subscription-routing/README.md
   workflow_mermaid: |
-    flowchart TD
+    flowchart LR
       A[Schedule] --> B[Check subscription]
       B --> C{subscription_status}
       C -->|registered| D[Log compliant]
@@ -389,7 +389,7 @@
   github_path: kernel-compliance/101-kernel-compliance-routing/
   github_doc: kernel-compliance/101-kernel-compliance-routing/README.md
   workflow_mermaid: |
-    flowchart TD
+    flowchart LR
       A[Schedule] --> B[Scan kernel compliance]
       B --> C{kernel_compliance}
       C -->|compliant| D[Log OK]
@@ -419,7 +419,7 @@
   github_path: incident-remediation/
   github_doc: incident-remediation/README.md
   workflow_mermaid: |
-    flowchart TD
+    flowchart LR
       A[Incident alert] --> B[AI triage agent]
       B --> C[Select remediation strategy]
       C --> D[Run playbook]
@@ -449,7 +449,7 @@
   github_path: incident-remediation/
   github_doc: incident-remediation/README.md
   workflow_mermaid: |
-    flowchart TD
+    flowchart LR
       A[Multiple correlated alerts] --> B[Correlate services]
       B --> C{Root cause identified?}
       C -->|Yes| D[Targeted remediation]
