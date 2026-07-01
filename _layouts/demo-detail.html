@@ -1,22 +1,28 @@
 ---
 layout: default
+mermaid: true
 ---
 {% assign demo = site.data.demos | where: "slug", page.demo_slug | first %}
 {% assign detail = site.data.demo_pages[page.demo_slug] %}
 
-<a href="{{ '/' | relative_url }}" class="back-link">← All demos</a>
-
 <div class="detail-hero">
-  {% if demo.status == "coming-soon" %}
-    <p class="detail-status detail-status--soon">Coming soon — scaffold only</p>
-  {% else %}
-    <p class="detail-status detail-status--active">Active</p>
-  {% endif %}
-  <h1>{{ demo.title }}</h1>
-  <p class="subtitle">{{ demo.subtitle }}</p>
-  {% if detail.one_liner %}
-    <p class="detail-one-liner"><em>{{ detail.one_liner }}</em></p>
-  {% endif %}
+  <div class="detail-hero__top">
+    <div class="detail-hero__main">
+      {% if demo.status == "coming-soon" %}
+        <p class="detail-status detail-status--soon">Coming soon — scaffold only</p>
+      {% else %}
+        <p class="detail-status detail-status--active">Active</p>
+      {% endif %}
+      <h1>{{ demo.title }}</h1>
+      <p class="subtitle">{{ demo.subtitle }}</p>
+      {% if detail.one_liner %}
+        <p class="detail-one-liner"><em>{{ detail.one_liner }}</em></p>
+      {% endif %}
+    </div>
+    <div class="detail-hero__actions">
+      {% include demo-cta.html demo=demo %}
+    </div>
+  </div>
   <div class="detail-tags">
     <span class="tag">Level {{ demo.level }}</span>
     {% for tag in demo.tags %}
@@ -26,21 +32,18 @@ layout: default
   <hr class="detail-divider">
 </div>
 
-<div class="cta-row">
-  {% include demo-cta.html demo=demo %}
-</div>
-
-{% if detail.use_case %}
-<section class="detail-section">
+{% assign description = detail.description | default: detail.use_case %}
+{% if description %}
+<section class="detail-section" id="description">
   <h2>Description</h2>
-  <p>{{ detail.use_case }}</p>
+  <p>{{ description }}</p>
 </section>
 {% endif %}
 
 {% include demo-interactive.html demo=demo %}
 
 {% if detail.bullets %}
-<section class="detail-section">
+<section class="detail-section" id="planned-scope">
   <h2>Planned scope</h2>
   <ul class="detail-list">
     {% for item in detail.bullets %}
@@ -51,7 +54,7 @@ layout: default
 {% endif %}
 
 {% if detail.routes %}
-<section class="detail-section">
+<section class="detail-section" id="switch-routing">
   <h2>Switch routing</h2>
   <div class="detail-table-wrap">
     <table class="detail-table">
@@ -77,7 +80,7 @@ layout: default
 {% endif %}
 
 {% if detail.related_table %}
-<section class="detail-section">
+<section class="detail-section" id="related-demos">
   <h2>{{ detail.related_table.heading }}</h2>
   <div class="detail-table-wrap">
     <table class="detail-table">
@@ -103,7 +106,7 @@ layout: default
 {% endif %}
 
 {% if demo.workflow_mermaid %}
-<section class="detail-section">
+<section class="detail-section" id="workflow">
   <h2>Workflow</h2>
   {% include workflow-diagram.html mermaid=demo.workflow_mermaid %}
 </section>
@@ -111,15 +114,19 @@ layout: default
 
 {% include demo-playbooks.html slug=page.demo_slug %}
 
-{% if detail.why %}
-<section class="detail-section">
-  <h2>{{ detail.why_heading | default: "Why a switch?" }}</h2>
-  <p>{{ detail.why }}</p>
+{% if detail.why_it_matters %}
+<section class="detail-section" id="why-it-matters">
+  <h2>Why it matters</h2>
+  <ul class="detail-list">
+    {% for item in detail.why_it_matters %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
 </section>
 {% endif %}
 
 {% if detail.demo_ideas %}
-<section class="detail-section">
+<section class="detail-section" id="demo-ideas">
   <h2>Demo ideas</h2>
   <ul class="detail-list">
     {% for item in detail.demo_ideas %}
@@ -130,7 +137,7 @@ layout: default
 {% endif %}
 
 {% if demo.status == "coming-soon" %}
-<section class="detail-section">
+<section class="detail-section" id="planned-artifacts">
   <h2>Planned artifacts</h2>
   <p>When built, this demo will include automation orchestrator workflow JSON under <code>{{ demo.github_path }}</code>.</p>
 </section>

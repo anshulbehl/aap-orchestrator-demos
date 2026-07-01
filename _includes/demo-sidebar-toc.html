@@ -1,0 +1,35 @@
+{% assign demo = site.data.demos | where: "slug", page.demo_slug | first %}
+{% assign detail = site.data.demo_pages[page.demo_slug] %}
+{% assign pb = site.data.demo_playbooks[page.demo_slug] %}
+
+<nav class="demo-toc" aria-label="On this page">
+  <p class="nav-heading">On this page</p>
+  {% if detail.description or detail.use_case %}
+    <a href="#description" class="demo-toc__link">Description</a>
+  {% endif %}
+  <a href="#interactive-experience" class="demo-toc__link">Interactive Experience</a>
+  {% if detail.bullets %}
+    <a href="#planned-scope" class="demo-toc__link">Planned scope</a>
+  {% endif %}
+  {% if detail.routes %}
+    <a href="#switch-routing" class="demo-toc__link">Switch routing</a>
+  {% endif %}
+  {% if detail.related_table %}
+    <a href="#related-demos" class="demo-toc__link">{{ detail.related_table.heading }}</a>
+  {% endif %}
+  {% if demo.workflow_mermaid %}
+    <a href="#workflow" class="demo-toc__link">Workflow</a>
+  {% endif %}
+  {% if pb %}
+    <a href="#playbooks" class="demo-toc__link">Playbooks</a>
+  {% endif %}
+  {% if detail.why_it_matters %}
+    <a href="#why-it-matters" class="demo-toc__link">Why it matters</a>
+  {% endif %}
+  {% if detail.demo_ideas %}
+    <a href="#demo-ideas" class="demo-toc__link">Demo ideas</a>
+  {% endif %}
+  {% if demo.status == "coming-soon" %}
+    <a href="#planned-artifacts" class="demo-toc__link">Planned artifacts</a>
+  {% endif %}
+</nav>

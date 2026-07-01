@@ -15,51 +15,25 @@
         <span class="logo-text">Automation orchestrator</span>
       </a>
 
-      <nav class="sidebar-nav">
-        <p class="nav-heading">Explore</p>
-        <a href="{{ '/' | relative_url }}" class="nav-link{% if page.url == '/' %} active{% endif %}">All demos</a>
-        <a href="{{ '/' | relative_url }}#active" class="nav-link" data-filter-nav="active">Active</a>
-        <a href="{{ '/' | relative_url }}#rule-based" class="nav-link" data-filter-nav="rule-based">Rule-based</a>
-        <a href="{{ '/' | relative_url }}#coming-soon" class="nav-link" data-filter-nav="coming-soon">Coming soon</a>
+      {% if page.demo_slug %}
+        <a href="{{ '/' | relative_url }}" class="nav-link sidebar-back">← All demos</a>
+        {% include demo-sidebar-toc.html %}
+      {% else %}
+        <nav class="sidebar-nav">
+          <p class="nav-heading">Explore</p>
+          <a href="{{ '/' | relative_url }}" class="nav-link{% if page.url == '/' %} active{% endif %}">All demos</a>
+          <a href="{{ '/' | relative_url }}#active" class="nav-link" data-filter-nav="active">Active</a>
+          <a href="{{ '/' | relative_url }}#coming-soon" class="nav-link" data-filter-nav="coming-soon">Coming soon</a>
+        </nav>
+      {% endif %}
 
-        <p class="nav-heading">Categories</p>
-        <a href="{{ '/' | relative_url }}#cert-rotation" class="nav-link" data-filter-nav="cert-rotation">Cert rotation</a>
-        <a href="{{ '/' | relative_url }}#disk-utilization" class="nav-link" data-filter-nav="disk-utilization">Disk utilization</a>
-        <a href="{{ '/' | relative_url }}#incident-remediation" class="nav-link" data-filter-nav="incident-remediation">Incident remediation</a>
-
-        <p class="nav-heading">Resources</p>
-        <a href="https://github.com/{{ site.repository }}" class="nav-link" target="_blank" rel="noopener">GitHub repo</a>
-        <a href="https://github.com/ansible-tmm" class="nav-link" target="_blank" rel="noopener">Ansible-TMM org</a>
-        <a href="https://github.com/{{ site.repository }}/blob/main/DEVELOPER.md" class="nav-link" target="_blank" rel="noopener">Developer guide</a>
-      </nav>
+      {% include sidebar-footer.html %}
     </aside>
 
     <div class="content-column">
       <main class="main">
         {{ content }}
       </main>
-
-      <footer class="site-footer">
-        <div class="site-footer__inner">
-          <p class="site-footer__credit">
-            Produced by the
-            <a href="https://github.com/ansible-tmm" target="_blank" rel="noopener">Ansible-TMM</a>
-            team
-          </p>
-          <a
-            href="https://github.com/{{ site.repository }}"
-            class="site-footer__github"
-            target="_blank"
-            rel="noopener"
-            aria-label="View source on GitHub"
-          >
-            <svg class="site-footer__github-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-            </svg>
-            <span>Source on GitHub</span>
-          </a>
-        </div>
-      </footer>
     </div>
   </div>
 
@@ -83,6 +57,10 @@
 
   {% if page.layout == 'default' and page.url == '/' %}
   <script src="{{ '/assets/js/filters.js' | relative_url }}"></script>
+  {% endif %}
+
+  {% if page.demo_slug %}
+  <script src="{{ '/assets/js/demo-toc.js' | relative_url }}"></script>
   {% endif %}
 </body>
 </html>

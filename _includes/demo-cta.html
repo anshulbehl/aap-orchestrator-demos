@@ -1,9 +1,10 @@
 {% comment %}
-  Primary GitHub doc link and optional secondary CTAs.
+  Demo page actions — GitHub doc link and workflow JSON download.
   Usage: {% include demo-cta.html demo=demo %}
 {% endcomment %}
 {% assign d = include.demo %}
 {% assign gh_base = "https://github.com/" | append: site.repository | append: "/blob/main/" %}
+{% assign raw_base = "https://raw.githubusercontent.com/" | append: site.repository | append: "/main/" %}
 {% if d.github_doc %}
   {% assign github_doc = d.github_doc %}
 {% else %}
@@ -15,5 +16,17 @@
   <a href="{{ gh_base }}{{ d.setup_guide }}" class="btn btn-secondary" target="_blank" rel="noopener">Setup guide</a>
 {% endif %}
 {% if d.status == "active" and d.workflow_json %}
-  <a href="{{ gh_base }}{{ d.workflow_json }}" class="btn btn-secondary" target="_blank" rel="noopener">Import workflow JSON</a>
+  {% assign json_filename = d.workflow_json | split: '/' | last %}
+  <a
+    href="{{ raw_base }}{{ d.workflow_json }}"
+    class="btn btn-secondary btn-download"
+    data-download-json
+    data-filename="{{ json_filename }}"
+    rel="noopener"
+  >
+    <svg class="btn-download__icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.586l2.293-2.293a1 1 0 0 1 1.414 1.414l-4 4a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L11 13.586V4a1 1 0 0 1 1-1zm-7 14a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1z"/>
+    </svg>
+    Download JSON
+  </a>
 {% endif %}

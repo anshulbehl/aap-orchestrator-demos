@@ -22,8 +22,6 @@
         return status === 'active';
       case 'coming-soon':
         return status === 'coming-soon';
-      case 'rule-based':
-        return usesAi === false;
       case 'cert-rotation':
       case 'disk-utilization':
       case 'incident-remediation':
@@ -96,7 +94,7 @@
   });
 
   var hash = window.location.hash.replace('#', '');
-  if (hash && ['active', 'coming-soon', 'cert-rotation', 'disk-utilization', 'incident-remediation', 'rule-based'].indexOf(hash) >= 0) {
+  if (hash && ['active', 'coming-soon', 'cert-rotation', 'disk-utilization', 'incident-remediation'].indexOf(hash) >= 0) {
     activeFilter = hash;
     pills.forEach(function (p) {
       p.classList.toggle('active', p.dataset.filter === activeFilter);

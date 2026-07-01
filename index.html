@@ -7,16 +7,12 @@ description: Browse automation orchestrator demo workflows
 {% assign all_demos = site.data.demos %}
 {% assign active_count = 0 %}
 {% assign soon_count = 0 %}
-{% assign rule_based_count = 0 %}
 {% for d in all_demos %}
   {% if d.status == "active" %}
     {% assign active_count = active_count | plus: 1 %}
   {% else %}
     {% assign soon_count = soon_count | plus: 1 %}
   {% endif %}
-  {% unless d.uses_ai %}
-    {% assign rule_based_count = rule_based_count | plus: 1 %}
-  {% endunless %}
 {% endfor %}
 
 <div class="hero">
@@ -40,7 +36,6 @@ description: Browse automation orchestrator demo workflows
 <div class="filters" role="tablist" aria-label="Filter demos">
   <button type="button" class="filter-pill active" data-filter="all">All <span class="count">{{ all_demos.size }}</span></button>
   <button type="button" class="filter-pill" data-filter="active">Active <span class="count">{{ active_count }}</span></button>
-  <button type="button" class="filter-pill" data-filter="rule-based">Rule-based <span class="count">{{ rule_based_count }}</span></button>
   <button type="button" class="filter-pill" data-filter="switch">Switch</button>
   <button type="button" class="filter-pill" data-filter="ai-agent">AI Agent</button>
   <button type="button" class="filter-pill" data-filter="coming-soon">Coming soon <span class="count">{{ soon_count }}</span></button>
