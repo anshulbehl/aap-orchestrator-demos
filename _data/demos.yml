@@ -31,7 +31,7 @@
       C -->|"< 80%"| D@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Continue", pos: "b", h: 96, constraint: "on" }
       C -->|"80–95%"| E@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Cleanup logs & cache", pos: "b", h: 96, constraint: "on" }
       C -->|"> 95%"| F@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Expand EBS volume", pos: "b", h: 96, constraint: "on" }
-      C -->|default| G@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Fallback — manual review", pos: "b", h: 96, constraint: "on" }
+      C -->|Fallback| G@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Fallback — manual review", pos: "b", h: 96, constraint: "on" }
       D --> H@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Notify — OK", pos: "b", h: 96, constraint: "on" }
       E --> I@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Notify — Warning", pos: "b", h: 96, constraint: "on" }
       F --> J@{ img: "__ASSET__/assets/icons/launch-aap-job-template.png", label: "Notify — Critical", pos: "b", h: 96, constraint: "on" }
