@@ -1,0 +1,72 @@
+---
+- name: Check disk utilization
+  hosts: "{{ _host | default('all') }}"
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Apply defaults
+      ansible.builtin.set_fact:
+        disk_mount: "{{ disk_mount | default('/') }}"
+        disk_warn_threshold: "{{ disk_warn_threshold | default(80) }}"
+        disk_critical_threshold: "{{ disk_critical_threshold | default(95) }}"
+        _test_disk_use_percent: "{{ test_disk_use_percent | default('') | string | trim }}"
+
+    - name: Use test disk use percent (skip live df)
+      ansible.builtin.set_fact:
+        disk_use_percent: "{{ _test_disk_use_percent | int }}"
+      when: _test_disk_use_percent | length > 0
+
+    - name: Gather mount facts
+      ansible.builtin.setup:
+        gather_subset:
+          - mounts
+      when: _test_disk_use_percent | length == 0
+
+    - name: Resolve mount from facts
+      ansible.builtin.set_fact:
+        _mounts: "{{ ansible_mounts | selectattr('mount', 'equalto', disk_mount) | list }}"
+      when: _test_disk_use_percent | length == 0
+
+    - name: Fail when mount is missing
+      ansible.builtin.fail:
+        msg: "Mount {{ disk_mount }} not found on {{ inventory_hostname }}."
+      when:
+        - _test_disk_use_percent | length == 0
+        - _mounts | length == 0
+
+    - name: Calculate disk use percent for mount
+      ansible.builtin.set_fact:
+        disk_use_percent: "{{ ((_mounts[0].block_used / _mounts[0].block_total) * 100) | int }}"
+      when: _test_disk_use_percent | length == 0
+
+    - name: Bucket disk use into switch tier
+      ansible.builtin.set_fact:
+        disk_tier: >-
+          {%- set pct = disk_use_percent | int -%}
+          {%- if pct < (disk_warn_threshold | int) -%}
+          ok
+          {%- elif pct <= (disk_critical_threshold | int) -%}
+          warn
+          {%- else -%}
+          critical
+          {%- endif -%}
+
+    - name: Publish disk_tier for AO switch
+      ansible.builtin.set_stats:
+        data:
+          disk_mount: "{{ disk_mount }}"
+          disk_tier: "{{ disk_tier }}"
+          disk_use_percent: "{{ disk_use_percent }}"
+          notify_host: "{{ ansible_play_hosts | join(',') }}"
+        per_host: false
+        aggregate: false
+      run_once: true
+
+    - name: Show detected disk tier
+      ansible.builtin.debug:
+        msg: >-
+          {%- if _test_disk_use_percent | length > 0 -%}
+          [TEST] Simulated {{ disk_mount }} at {{ disk_use_percent }}% full → disk_tier={{ disk_tier }}
+          {%- else -%}
+          {{ disk_mount }} is {{ disk_use_percent }}% full → disk_tier={{ disk_tier }}
+          {%- endif -%}

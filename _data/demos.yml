@@ -1,3 +1,42 @@
+- slug: sean-test
+  title: Sean Test — Disk Icon Experiment
+  subtitle: Mermaid PNG test (disk utilization copy)
+  category: sean-test
+  level: "101"
+  status: active
+  featured: true
+  uses_ai: false
+  tags:
+    - Switch
+    - Rule-based
+    - Mattermost
+    - EC2
+  thumbnail:
+    gradient: "linear-gradient(135deg, #3a2a4a 0%, #1a1028 50%, #2a1a3a 100%)"
+    icon: "🧪"
+  blurb: Sandbox copy of disk utilization — tests custom AAP job template PNG in the workflow diagram.
+  stats:
+    workflows: 1
+    playbooks: 6
+    setup_minutes: 15
+  url: /demos/sean-test/
+  github_path: sean-test/101-disk-threshold-routing/
+  github_doc: sean-test/101-disk-threshold-routing/README.md
+  setup_guide: sean-test/101-disk-threshold-routing/README.md
+  workflow_json: sean-test/101-disk-threshold-routing/ao/disk-demo-101.json
+  workflow_mermaid: |
+    flowchart TD
+      A[Manual trigger] --> B@{ img: "__ASSET__/icons/launch-aap-job-template.png", label: "Disk Utilization Check", pos: "b", h: 96, constraint: "on" }
+      B --> C{Switch on disk_use_percent}
+      C -->|"< 80%"| D[Continue]
+      C -->|"80–95%"| E[Cleanup logs & cache]
+      C -->|"> 95%"| F[Expand EBS volume]
+      C -->|default| G[Fallback — manual review]
+      D --> H[Notify — OK]
+      E --> I[Notify — Warning]
+      F --> J[Notify — Critical]
+      G --> K[Notify — Unsupported]
+
 - slug: disk-utilization-101
   title: Disk Utilization & Remediation
   subtitle: Proportional disk response with switch routing

@@ -1,5 +1,7 @@
 {% if include.mermaid %}
+{% assign asset_base = site.url | append: site.baseurl %}
+{% assign diagram = include.mermaid | replace: '__ASSET__', asset_base %}
 <div class="workflow-diagram">
-  <pre class="mermaid">{{ include.mermaid }}</pre>
+  <pre class="mermaid">{{ diagram }}</pre>
 </div>
 {% endif %}

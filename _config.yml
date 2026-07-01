@@ -16,6 +16,7 @@ exclude:
   - sean_old_ignore/
   - cert-rotation/
   - disk-utilization/
+  - sean-test/
   - incident-remediation/
   - service-health/
   - patch-management/

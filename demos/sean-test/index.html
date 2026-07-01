@@ -1,0 +1,50 @@
+---
+layout: default
+title: Sean Test — Disk Icon Experiment
+description: Mermaid PNG test sandbox copy of disk utilization
+demo_slug: sean-test
+mermaid: true
+---
+
+{% assign demo = site.data.demos | where: "slug", page.demo_slug | first %}
+
+<a href="{{ '/' | relative_url }}" class="back-link">← All demos</a>
+
+<div class="detail-hero">
+  <h1>{{ demo.title }}</h1>
+  <p class="subtitle">{{ demo.subtitle }}</p>
+  <div class="detail-tags">
+    <span class="tag">Level {{ demo.level }}</span>
+    {% for tag in demo.tags %}
+      <span class="tag">{{ tag }}</span>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="cta-row">
+  {% include demo-cta.html demo=demo %}
+</div>
+
+<section class="detail-section">
+  <h2>The use case</h2>
+  <p>
+    Sandbox copy of disk utilization for testing custom Mermaid diagram assets. The workflow diagram uses
+    an AAP job template PNG on the check node instead of a plain text box — all playbooks and AO JSON
+    are identical to the disk utilization 101 demo.
+  </p>
+</section>
+
+<section class="detail-section">
+  <h2>Workflow</h2>
+  {% include workflow-diagram.html mermaid=demo.workflow_mermaid %}
+</section>
+
+{% include demo-playbooks.html slug=page.demo_slug %}
+
+<section class="detail-section">
+  <h2>What you'll see</h2>
+  <p>
+    Same four switch ports and remediate paths as disk utilization. The check node renders as the
+    Launch AAP job template card PNG — compare with the standard disk utilization demo to see the difference.
+  </p>
+</section>

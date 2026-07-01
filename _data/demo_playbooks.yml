@@ -1,3 +1,31 @@
+sean-test:
+  status: active
+  items:
+    - name: check_disk.yml
+      path: sean-test/101-disk-threshold-routing/aap/playbooks/check_disk.yml
+      description: Reads filesystem usage on the target mount and publishes disk_use_percent and disk_tier artifacts for the switch.
+      runs_on: RHEL EC2 node
+    - name: remediate_disk_continue.yml
+      path: sean-test/101-disk-threshold-routing/aap/playbooks/remediate_disk_continue.yml
+      description: Healthy path when disk is below the warning threshold — logs status and publishes notify artifacts with no changes to the host.
+      runs_on: RHEL EC2 node
+    - name: remediate_disk_cleanup.yml
+      path: sean-test/101-disk-threshold-routing/aap/playbooks/remediate_disk_cleanup.yml
+      description: Reclaims dnf package cache and old log archives, then publishes before/after usage stats for the warning notify tier.
+      runs_on: RHEL EC2 node
+    - name: remediate_disk_expand.yml
+      path: sean-test/101-disk-threshold-routing/aap/playbooks/remediate_disk_expand.yml
+      description: Increases the root EBS volume in AWS, then runs growpart and xfs_growfs on the host for the critical expand path.
+      runs_on: AWS (localhost) + RHEL EC2 node
+    - name: remediate_disk_fallback.yml
+      path: sean-test/101-disk-threshold-routing/aap/playbooks/remediate_disk_fallback.yml
+      description: Handles unexpected switch tiers (e.g. boundary values) with no remediation and publishes artifacts for the unsupported notify template.
+      runs_on: RHEL EC2 node
+    - name: notify_chatroom.yml
+      path: sean-test/101-disk-threshold-routing/aap/playbooks/notify_chatroom.yml
+      description: Includes the tier-specific Mattermost template (ok, warn, critical, unsupported) and posts the remediation summary to chat.
+      runs_on: localhost (Mattermost API)
+
 disk-utilization-101:
   status: active
   items:
