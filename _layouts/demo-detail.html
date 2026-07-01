@@ -6,28 +6,26 @@ mermaid: true
 {% assign detail = site.data.demo_pages[page.demo_slug] %}
 
 <div class="detail-hero">
-  <div class="detail-hero__top">
-    <div class="detail-hero__main">
-      {% if demo.status == "coming-soon" %}
-        <p class="detail-status detail-status--soon">Coming soon — scaffold only</p>
-      {% else %}
-        <p class="detail-status detail-status--active">Active</p>
-      {% endif %}
-      <h1>{{ demo.title }}</h1>
-      <p class="subtitle">{{ demo.subtitle }}</p>
-      {% if detail.one_liner %}
-        <p class="detail-one-liner"><em>{{ detail.one_liner }}</em></p>
-      {% endif %}
-    </div>
-    <div class="detail-hero__actions">
-      {% include demo-cta.html demo=demo %}
-    </div>
+  <div class="detail-hero__main">
+    {% if demo.status == "coming-soon" %}
+      <p class="detail-status detail-status--soon">Coming soon — scaffold only</p>
+    {% else %}
+      <p class="detail-status detail-status--active">Active</p>
+    {% endif %}
+    <h1>{{ demo.title }}</h1>
+    <p class="subtitle">{{ demo.subtitle }}</p>
+    {% if detail.one_liner %}
+      <p class="detail-one-liner"><em>{{ detail.one_liner }}</em></p>
+    {% endif %}
   </div>
   <div class="detail-tags">
     <span class="tag">Level {{ demo.level }}</span>
     {% for tag in demo.tags %}
       <span class="tag">{{ tag }}</span>
     {% endfor %}
+  </div>
+  <div class="detail-hero__actions">
+    {% include demo-cta.html demo=demo %}
   </div>
   <hr class="detail-divider">
 </div>

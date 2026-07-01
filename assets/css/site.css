@@ -478,17 +478,8 @@ a {
   margin-bottom: 32px;
 }
 
-.detail-hero__top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 16px;
-}
-
 .detail-hero__main {
-  flex: 1;
-  min-width: 0;
+  margin-bottom: 16px;
 }
 
 .detail-hero__actions {
@@ -496,7 +487,7 @@ a {
   flex-wrap: wrap;
   gap: 10px;
   justify-content: flex-end;
-  flex-shrink: 0;
+  margin-bottom: 12px;
 }
 
 .detail-hero h1 {
@@ -516,7 +507,7 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .detail-divider {
@@ -837,11 +828,6 @@ a {
 
   .main {
     padding: 24px 20px 32px;
-  }
-
-  .detail-hero__top {
-    flex-direction: column;
-    align-items: stretch;
   }
 
   .detail-hero__actions {
