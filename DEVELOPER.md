@@ -31,6 +31,28 @@ cat disk-utilization/README.md
   group_vars/         # Variable defaults
 ```
 
+## Synchronize AO workflows from AAP
+
+[`playbooks/sync_ao_workflows.yml`](playbooks/sync_ao_workflows.yml) imports or
+updates every workflow export under a demo's `ao/` directory. Register it as an
+AAP job template in a project backed by this repository. The playbook reads the
+workflow JSON from the AAP project checkout, so the AAP execution environment
+does not need to clone this repository or reach GitHub during the job.
+
+Required extra variables or credential-backed values:
+
+```yaml
+ao_api_token: <Automation Orchestrator bearer token>
+ao_api_host: <Automation Orchestrator route host>
+ao_aap_credential_id: <AAP credential ID in AO>
+ao_aap_integration_id: <AAP integration ID in AO>
+```
+
+Optional values include `ao_agent_credential_id`, `ao_demo_project_id`, and
+`ao_workflow_root` (which defaults to the repository checkout's `ao` search
+root). The job template should use a localhost inventory because the playbook
+calls the AO API from the AAP execution environment.
+
 ## Repository structure
 
 ```
