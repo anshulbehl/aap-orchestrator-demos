@@ -1,3 +1,8 @@
+- name: Reset per-workflow normalization facts
+  ansible.builtin.set_fact:
+    __ao_triggers: []
+    __ao_nodes: []
+
 - name: Read workflow export {{ __ao_source.path | basename }}
   ansible.builtin.set_fact:
     __ao_workflow: "{{ lookup('file', __ao_source.path) | from_json }}"
